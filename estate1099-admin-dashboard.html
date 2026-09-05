@@ -1,0 +1,2956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Align360 · 1099 Administrator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --teal:#6bb1ad;--tl:#f0f8f7;--tm:#c8e4e2;--td:#4a8e8a;
+  --sky:#a7bcbd;--sky-txt:#5d7476;--sand:#edecdb;--w:#ffffff;--blk:#1a1a1a;
+  --gray:#5c6565;--gl:#f7f7f5;--border:#e2e4e0;
+  --red:#c0392b;--rb:#fdf3f2;--amber:#9a6b00;--ab:#fdf8ed;
+  --green:#2e6b3e;--gb:#f0f7f2;--st:#2d7a76;--sb:#eef7f6;
+  --purple:#6b4fa0;--pb:#f3f0fa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Jost',sans-serif;background:var(--gl);color:var(--blk);font-size:13px;line-height:1.5;}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh;}
+
+/* ── LOGIN ── */
+#login-screen,#setpw-screen{position:fixed;inset:0;background:var(--teal);display:flex;align-items:center;justify-content:center;z-index:500;}
+#setpw-screen{display:none;}
+.login-card{background:var(--w);border-radius:3px;padding:36px 32px;width:340px;box-shadow:0 12px 48px rgba(0,0,0,0.18);}
+.login-brand{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--blk);text-align:center;letter-spacing:0.05em;}
+.login-brand span{color:var(--teal);}
+.login-tag{font-size:9px;color:var(--sky-txt);letter-spacing:0.14em;text-transform:uppercase;text-align:center;margin-bottom:24px;}
+.login-error{font-size:11px;color:var(--red);margin-bottom:10px;min-height:14px;}
+
+/* ── SHELL ── */
+.sidebar{background:var(--teal);display:flex;flex-direction:column;height:100vh;overflow-y:auto;border-right:1px solid var(--border);}
+.main{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.main-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.sb-brand{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.2);}
+.sb-logo{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.sb-logo svg{width:28px;height:28px;flex-shrink:0;}
+.sb-wm{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--w);letter-spacing:0.05em;}
+.sb-wm span{color:var(--sand);}
+.sb-tag{font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:0.14em;text-transform:uppercase;}
+.sb-nav{padding:12px 0;flex:1;}
+.nav-group-label{font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.5);padding:10px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;transition:background 0.15s;color:rgba(255,255,255,0.75);font-size:12px;font-weight:400;border-left:2px solid transparent;border:none;width:100%;background:none;text-align:left;font-family:'Jost',sans-serif;}
+.nav-item:hover{background:rgba(255,255,255,0.12);color:var(--w);}
+.nav-item.active{background:rgba(255,255,255,0.18);color:var(--w);border-left:2px solid var(--w);}
+.nav-item i{font-size:15px;width:16px;text-align:center;}
+.nav-count{margin-left:auto;background:var(--sand);color:var(--td);border-radius:9px;padding:0 6px;font-size:9px;font-weight:600;min-width:17px;text-align:center;}
+.sb-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.2);font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:0.06em;}
+.main-hdr{padding:16px 24px;background:var(--w);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:14px;}
+.main-hdr-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--blk);}
+.main-hdr-sub{font-size:11px;font-weight:300;color:var(--sky-txt);margin-top:2px;}
+.view{display:none;}.view.active{display:block;}
+
+/* ── BUTTONS ── */
+.btn-sm{padding:7px 14px;border-radius:2px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-teal{background:var(--teal);color:var(--w);}.btn-teal:hover{background:var(--td);}
+.btn-out{background:var(--w);color:var(--td);border:1px solid var(--teal);}.btn-out:hover{background:var(--tl);}
+.btn-gray{background:var(--gl);color:var(--gray);border:1px solid var(--border);}.btn-gray:hover{background:var(--border);}
+.btn-red{background:var(--rb);color:var(--red);border:1px solid #f0cbc8;}.btn-red:hover{background:#fae8e6;}
+.btn-green{background:var(--gb);color:var(--green);border:1px solid #bcd9c4;}.btn-green:hover{background:#e2f0e7;}
+.btn-xs{padding:4px 9px;font-size:10px;}
+.btn-sm:disabled{opacity:0.45;cursor:not-allowed;}
+
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--blk);}
+
+/* ── CARDS ── */
+.card{background:var(--w);border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+.card-hdr{padding:9px 14px;background:var(--gl);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.card-title{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);}
+.card-body{padding:12px 14px;}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;gap:14px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-weight:400;color:var(--sky-txt);}
+.info-val{font-weight:500;color:var(--blk);text-align:right;}
+
+/* ── TABLES ── */
+.client-table{width:100%;border-collapse:collapse;background:var(--w);border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+.client-table th{padding:8px 12px;text-align:left;font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--sky-txt);border-bottom:1px solid var(--border);background:var(--gl);}
+.client-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:300;vertical-align:middle;}
+.client-table tr:last-child td{border-bottom:none;}
+.client-table tbody tr.clickable:hover td{background:#fafaf7;cursor:pointer;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.totals-row td{background:var(--gl);font-weight:600;font-size:12px;border-top:2px solid var(--border);}
+
+/* ── INPUTS ── */
+.field-group{margin-bottom:14px;}
+.field-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--sky-txt);margin-bottom:5px;}
+.field-input{width:100%;border:1px solid var(--border);border-radius:2px;padding:8px 11px;font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:var(--blk);background:var(--gl);outline:none;transition:border-color 0.2s;}
+.field-input:focus{border-color:var(--teal);background:var(--w);}
+select.field-input{cursor:pointer;}
+textarea.field-input{resize:vertical;min-height:70px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-hint{font-size:10px;color:var(--sky-txt);margin-top:3px;font-weight:300;}
+.status-select{border:1px solid var(--border);border-radius:2px;padding:6px 8px;font-size:12px;background:var(--w);cursor:pointer;outline:none;font-family:'Jost',sans-serif;}
+.status-select:focus{border-color:var(--teal);}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;}
+.b-draft{background:var(--gl);color:var(--gray);border:1px solid var(--border);}
+.b-submitted{background:var(--ab);color:var(--amber);border:1px solid #ecd9a6;}
+.b-rejected{background:var(--rb);color:var(--red);border:1px solid #f0cbc8;}
+.b-approved{background:var(--sb);color:var(--st);border:1px solid var(--tm);}
+.b-paid{background:var(--gb);color:var(--green);border:1px solid #bcd9c4;}
+.b-none{background:var(--w);color:var(--sky-txt);border:1px dashed var(--border);}
+
+/* ── SUMMARY ── */
+.sum-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.sum-box{background:var(--w);border:1px solid var(--border);border-radius:2px;padding:12px 14px;}
+.sum-box.accent{background:var(--sb);border-color:var(--tm);}
+.sum-label{font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--sky-txt);margin-bottom:4px;}
+.sum-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;line-height:1.1;color:var(--blk);}
+.sum-sub{font-size:10px;color:var(--gray);margin-top:2px;}
+
+.notice{padding:10px 14px;border-radius:2px;font-size:12px;line-height:1.6;margin-bottom:14px;display:flex;gap:9px;align-items:flex-start;}
+.notice i{font-size:15px;flex-shrink:0;margin-top:1px;}
+.n-info{background:var(--sb);color:var(--st);border-left:3px solid var(--teal);}
+.n-warn{background:var(--ab);color:var(--amber);border-left:3px solid #d9ab3c;}
+.n-good{background:var(--gb);color:var(--green);border-left:3px solid #5a9e6e;}
+.n-bad{background:var(--rb);color:var(--red);border-left:3px solid var(--red);}
+.empty-note{padding:14px 0;font-size:12px;color:var(--sky-txt);font-style:italic;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--sky-txt);cursor:pointer;font-size:12px;margin-bottom:14px;transition:color 0.15s;background:none;border:none;font-family:'Jost',sans-serif;padding:0;}
+.back-btn:hover{color:var(--teal);}
+.mask{font-variant-numeric:tabular-nums;letter-spacing:0.04em;}
+.thin-flag{color:var(--amber);font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+
+/* ── MODALS ── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--w);border-radius:2px;width:520px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 8px 40px rgba(0,0,0,0.15);}
+.modal.wide{width:660px;}
+.modal-hdr{padding:14px 18px;background:var(--gl);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--blk);}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--sky-txt);font-size:20px;line-height:1;padding:0;}
+.modal-body{padding:20px 18px;}
+.modal-foot{padding:12px 18px;background:var(--gl);border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;}
+.fieldset-label{font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--td);margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--tm);}
+.fieldset-label:first-child{margin-top:0;}
+
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-wrap{position:relative;}
+.chart-tip{position:absolute;pointer-events:none;background:var(--blk);color:var(--w);padding:6px 9px;border-radius:2px;font-size:11px;line-height:1.45;white-space:nowrap;opacity:0;transition:opacity 0.12s;z-index:50;box-shadow:0 3px 12px rgba(0,0,0,0.25);}
+.chart-tip b{font-weight:600;}
+.chart-tip.show{opacity:1;}
+.bar-hit{fill:transparent;cursor:pointer;}
+.bar-hit:hover + .bar-mark,.bar-mark.hot{fill:var(--td);}
+@media(max-width:980px){.chart-grid{grid-template-columns:1fr;}.sum-strip{grid-template-columns:repeat(2,1fr);}.field-grid{grid-template-columns:1fr;}}
+
+/* ── ONBOARDING STEPS ── */
+.steps{display:flex;gap:3px;flex-wrap:wrap;}
+.step-pill{font-size:8.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;
+           padding:2px 7px;border-radius:2px;white-space:nowrap;border:1px solid transparent;}
+.sp-done{background:var(--gb);color:var(--green);border-color:#bcd9c4;}
+.sp-wait{background:var(--gl);color:var(--sky-txt);border-color:var(--border);}
+.sp-now{background:var(--ab);color:var(--amber);border-color:#ecd9a6;}
+.ob-row td{vertical-align:middle;}
+.ob-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+
+/* ── PRINT: the invoice as a filing-ready record ── */
+.print-only{display:none;}
+.print-head{border-bottom:2px solid var(--blk);padding-bottom:12px;margin-bottom:16px;}
+.print-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;}
+.print-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;font-size:11px;}
+.print-meta .k{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray);}
+.print-cert{margin-top:22px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--gray);line-height:1.6;}
+@media print{
+  .sidebar,.main-hdr,.modal-backdrop,.notice,.chart-grid,.back-btn,
+  .section-hdr select,.section-hdr button,.btn-sm,.nav-item,.sum-strip{display:none !important;}
+  html,body{height:auto;overflow:visible;background:#fff;}
+  .app{display:block;height:auto;}
+  .main,.main-body{height:auto;overflow:visible;padding:0;}
+  .view{display:none !important;} .view.active{display:block !important;}
+  .card,.client-table{border-color:#999;}
+  tr,.card{break-inside:avoid;}
+  thead{display:table-header-group;}
+  .print-only{display:block !important;}
+  a[href]:after{content:'';}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">Contractor Operations</div>
+    <div class="login-tag">Admin Portal</div>
+    <form id="login-form">
+      <div class="field-group"><div class="field-label">Email</div><input class="field-input" type="email" id="login-email" required autocomplete="username"></div>
+      <div class="field-group"><div class="field-label">Password</div><input class="field-input" type="password" id="login-password" required autocomplete="current-password"></div>
+      <div class="login-error" id="login-error"></div>
+      <button type="submit" class="btn-sm btn-teal" style="width:100%;justify-content:center;padding:11px" id="login-submit-btn">Log In</button>
+    </form>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" onclick="forgotPassword();return false;" style="font-size:11px;color:var(--sky-txt);text-decoration:none">Forgot your password?</a>
+    </div>
+  </div>
+</div>
+
+<!-- Shown when an invitation or reset link brings someone here. The link signs
+     them in but leaves them with no password of their own, so they have to be
+     asked for one before anything else happens. -->
+<div id="setpw-screen">
+  <div class="login-card">
+    <div class="login-brand">Contractor Operations</div>
+    <div class="login-tag" id="setpw-tag">Choose your password</div>
+    <form id="setpw-form">
+      <div class="field-group"><div class="field-label">New password</div>
+        <input class="field-input" type="password" id="setpw-a" required minlength="8" autocomplete="new-password"></div>
+      <div class="field-group"><div class="field-label">Confirm password</div>
+        <input class="field-input" type="password" id="setpw-b" required minlength="8" autocomplete="new-password"></div>
+      <div style="font-size:11px;color:var(--sky-txt);margin:-4px 0 12px">At least 8 characters. Nobody else ever sees it.</div>
+      <div class="login-error" id="setpw-error"></div>
+      <button type="submit" class="btn-sm btn-teal" style="width:100%;justify-content:center;padding:11px" id="setpw-btn">Save Password</button>
+    </form>
+  </div>
+</div>
+
+<div class="app" id="app-root" style="display:none">
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <svg viewBox="0 0 80 80" fill="none">
+        <path d="M40 8 A32 32 0 1 1 14 58" stroke="rgba(255,255,255,0.3)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M40 8 A32 32 0 0 1 66 58" stroke="var(--sand)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <polygon points="66,58 59,53 71,49" fill="var(--sand)"/>
+        <text x="40" y="56" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="32" font-weight="600" fill="white">A</text>
+        <text x="56" y="32" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" font-weight="600" fill="var(--sand)">360°</text>
+      </svg>
+      <div class="sb-wm">ALIGN<span>360</span></div>
+    </div>
+    <div class="sb-tag">1099 Administrator</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-group-label">Billing</div>
+    <button class="nav-item active" id="nav-roster" onclick="showRoster()"><i class="ti ti-address-book"></i> All Contractors</button>
+    <button class="nav-item" id="nav-overview" onclick="showOverview()"><i class="ti ti-layout-dashboard"></i> Monthly Summary</button>
+    <button class="nav-item" id="nav-review" onclick="showReview()"><i class="ti ti-checkbox"></i> Review Queue<span class="nav-count" id="review-count" style="display:none">0</span></button>
+    <div class="nav-group-label">Entity Records</div>
+    <button class="nav-item" id="nav-estates" onclick="showEstates()"><i class="ti ti-building-bank"></i> Entities</button>
+    <button class="nav-item" id="nav-contractors" onclick="showContractors()"><i class="ti ti-users"></i> Contractors</button>
+    <button class="nav-item" id="nav-onboarding" onclick="showOnboarding()"><i class="ti ti-user-check"></i> Onboarding<span class="nav-count" id="onboard-count" style="display:none">0</span></button>
+    <button class="nav-item" id="nav-contracts" onclick="showContracts()"><i class="ti ti-folders"></i> Contract Repository</button>
+    <button class="nav-item" id="nav-periods" onclick="showPeriods()"><i class="ti ti-calendar-month"></i> Billing Periods</button>
+    <div class="nav-group-label">Output</div>
+    <button class="nav-item" id="nav-export" onclick="showRoster(true)"><i class="ti ti-file-spreadsheet"></i> Payment Export</button>
+    <button class="nav-item" id="nav-1099" onclick="show1099()"><i class="ti ti-receipt-tax"></i> 1099-NEC Prep</button>
+    <button class="nav-item" onclick="exportBackup()"><i class="ti ti-file-download"></i> Export Backup</button>
+    <div class="nav-group-label">Platform</div>
+    <button class="nav-item" id="nav-admins" onclick="showAdmins()"><i class="ti ti-shield-lock"></i> Administrators</button>
+  </div>
+  <button class="nav-item" onclick="handleLogout()" style="border-top:1px solid rgba(255,255,255,0.2)">
+    <i class="ti ti-logout"></i> Log Out<span id="role-badge" style="margin-left:auto;font-size:8px;opacity:0.6;text-transform:uppercase"></span>
+  </button>
+  <div class="sb-footer">Align360 · Proprietary &amp; Confidential</div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="main-hdr">
+    <div>
+      <div class="main-hdr-title" id="hdr-title">Monthly Summary</div>
+      <div class="main-hdr-sub" id="hdr-sub">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <select class="status-select" id="estate-select" onchange="onEstateChange()"></select>
+      <div id="hdr-actions" style="display:flex;gap:8px"></div>
+    </div>
+  </div>
+  <div class="main-body">
+    <div class="view active" id="view-roster"><div id="roster-body"></div></div>
+    <div class="view" id="view-overview"><div id="overview-body"></div></div>
+    <div class="view" id="view-review"><div id="review-body"></div></div>
+    <div class="view" id="view-estates"><div id="estates-body"></div></div>
+    <div class="view" id="view-contractors"><div id="contractors-body"></div></div>
+    <div class="view" id="view-onboarding"><div id="onboarding-body"></div></div>
+    <div class="view" id="view-contracts"><div id="contracts-body"></div></div>
+    <div class="view" id="view-periods"><div id="periods-body"></div></div>
+    <div class="view" id="view-1099"><div id="tax-body"></div></div>
+    <div class="view" id="view-detail"><div id="detail-body"></div></div>
+    <div class="view" id="view-trend"><div id="trend-body"></div></div>
+    <div class="view" id="view-export"><div id="export-body"></div></div>
+    <div class="view" id="view-admins"><div id="admins-body"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-backdrop" id="modal-estate">
+  <div class="modal wide">
+    <div class="modal-hdr"><div class="modal-title" id="me-title">Add Entity</div><button class="modal-close" onclick="closeModal('modal-estate')">&times;</button></div>
+    <div class="modal-body" id="me-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-estate')">Cancel</button>
+      <button class="btn-sm btn-teal" id="me-save" onclick="saveEstate()">Save Entity</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-contractor">
+  <div class="modal wide">
+    <div class="modal-hdr"><div class="modal-title" id="mc-title">Add Contractor</div><button class="modal-close" onclick="closeModal('modal-contractor')">&times;</button></div>
+    <div class="modal-body" id="mc-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-contractor')">Cancel</button>
+      <button class="btn-sm btn-teal" id="mc-save" onclick="saveContractor()">Save Contractor</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-reject">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Return Invoice for Correction</div><button class="modal-close" onclick="closeModal('modal-reject')">&times;</button></div>
+    <div class="modal-body" id="mr-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-reject')">Cancel</button>
+      <button class="btn-sm btn-red" id="mr-save" onclick="confirmReject()">Return to Contractor</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-adjust">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Adjustments</div><button class="modal-close" onclick="closeModal('modal-adjust')">&times;</button></div>
+    <div class="modal-body" id="ma-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-adjust')">Cancel</button>
+      <button class="btn-sm btn-teal" onclick="saveAdjustments()">Save Adjustments</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-contract">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">File a Document</div><button class="modal-close" onclick="closeModal('modal-contract')">&times;</button></div>
+    <div class="modal-body" id="mdoc-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-contract')">Cancel</button>
+      <button class="btn-sm btn-teal" id="mdoc-save" onclick="saveContract()">Upload &amp; File</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-run">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="mrun-title">Export run</div><button class="modal-close" onclick="closeModal('modal-run')">&times;</button></div>
+    <div class="modal-body" id="mrun-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-run')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-period">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Add Billing Period</div><button class="modal-close" onclick="closeModal('modal-period')">&times;</button></div>
+    <div class="modal-body" id="mp-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-period')">Cancel</button>
+      <button class="btn-sm btn-teal" onclick="savePeriod()">Add Period</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-paid">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Record Payment</div><button class="modal-close" onclick="closeModal('modal-paid')">&times;</button></div>
+    <div class="modal-body" id="mpay-body"></div>
+    <div class="modal-foot">
+      <button class="btn-sm btn-gray" onclick="closeModal('modal-paid')">Cancel</button>
+      <button class="btn-sm btn-green" onclick="confirmPaid()">Mark Paid</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ SUPABASE CONNECTION ══════════════════════════════════════════════════
+// Every per-client value lives in config.js. This file is byte-identical for
+// every client, so shipping a fix means copying it over — never re-editing it.
+const CFG = window.ALIGN360_CONFIG || {};
+const SUPABASE_URL      = CFG.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || '';
+// Only offer signing online where it actually works — a button that errors is
+// worse than not offering it. Contractors upload a signed copy instead.
+const ESIGN = CFG.ESIGN_ENABLED === true;
+
+const CONFIGURED = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40;
+//  Read synchronously, the moment the script runs. An invitation or reset link
+//  arrives as a token in the URL fragment, and supabase-js strips that fragment
+//  during its own asynchronous start-up — so waiting until initApp awaits
+//  something is a race the library sometimes wins.
+const LINK_HASH = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+
+const sb = CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// ═══ STATE ════════════════════════════════════════════════════════════════
+let me = null;
+let estates = [], estate = null;
+let contractors = [], periods = [], allInvoices = [], contracts = [];
+// Portfolio-wide (every estate) — the roster and the accounting export read these.
+let gContractors = [], gPeriods = [], gInvoices = [];
+let rosterKey = null;                 // 'YYYY-MM' selected on the roster
+let bankAlerts = [];                  // unacknowledged bank / rate changes
+let period = null;                  // selected billing period on the overview
+let detailContractor = null;        // contractor being drilled into
+let editingContractorId = null;
+let rejectTarget = null, adjustTarget = null, paidTarget = null;
+
+const THIN_DESC = 15;
+const MON = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ═══ FORMULAS — identical to the contractor portal and the workbook ═══════
+const invoicedMinutes = m => Math.ceil((Number(m) || 0) / 5) * 5;
+const entryHours      = m => invoicedMinutes(m) / 60;
+
+const money = n => '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const hrs   = n => (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc   = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mask  = v => { const s=String(v||'').replace(/\s/g,''); return s ? '••••' + s.slice(-4) : '—'; };
+const dt    = v => v ? new Date(v).toLocaleDateString() : '—';
+
+function statusBadge(s){
+  const map = { draft:['b-draft','Draft'], submitted:['b-submitted','Submitted'],
+                rejected:['b-rejected','Returned'], approved:['b-approved','Filed'],
+                paid:['b-paid','Paid'], none:['b-none','Not started'] };
+  const [cls,label] = map[s] || map.none;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ═══ AUTH ═════════════════════════════════════════════════════════════════
+async function initApp(){
+  if (!CONFIGURED){
+    document.getElementById('login-error').innerHTML =
+      'Not connected yet. Copy <b>config.example.js</b> to <b>config.js</b> next to this file and fill in your Supabase project URL and anon key.';
+    document.getElementById('login-submit-btn').disabled = true;
+    return;
+  }
+  const hash = LINK_HASH;
+  const linkType = hash.get('type');
+  if (hash.get('error_description')){
+    showLoginScreen();
+    document.getElementById('login-error').textContent =
+      hash.get('error_description').replace(/\+/g,' ') + ' Ask another administrator for a new link.';
+    history.replaceState(null, '', location.pathname + location.search);
+    return;
+  }
+
+  const { data:{ session } } = await sb.auth.getSession();
+
+  if (session && (linkType === 'invite' || linkType === 'recovery' || linkType === 'signup')){
+    history.replaceState(null, '', location.pathname + location.search);
+    showSetPassword(linkType);
+    return;
+  }
+  if (session) await onAuthenticated(session); else showLoginScreen();
+}
+
+function showSetPassword(linkType){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-root').style.display='none';
+  document.getElementById('setpw-screen').style.display='flex';
+  document.getElementById('setpw-tag').textContent =
+    linkType === 'recovery' ? 'Choose a new password' : 'Choose your password';
+  document.getElementById('setpw-a').focus();
+}
+
+async function handleSetPassword(e){
+  e.preventDefault();
+  const a = document.getElementById('setpw-a').value;
+  const b = document.getElementById('setpw-b').value;
+  const err = document.getElementById('setpw-error');
+  const btn = document.getElementById('setpw-btn');
+  err.textContent = '';
+  if (a.length < 8){ err.textContent = 'Use at least 8 characters.'; return; }
+  if (a !== b){ err.textContent = 'Those two do not match.'; return; }
+
+  btn.disabled = true; btn.style.opacity = '0.6';
+  const { error } = await sb.auth.updateUser({ password: a });
+  btn.disabled = false; btn.style.opacity = '1';
+  if (error){ err.textContent = error.message; return; }
+
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session){ showLoginScreen(); return; }
+  document.getElementById('setpw-screen').style.display='none';
+  await onAuthenticated(session);
+}
+
+async function forgotPassword(){
+  const email = (document.getElementById('login-email').value || '').trim();
+  const err = document.getElementById('login-error');
+  if (!email){ err.textContent = 'Enter your email address above first, then click this again.'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  err.textContent = error
+    ? error.message
+    : 'If that address has an account, a reset link is on its way. Check your junk folder.';
+}
+
+function showLoginScreen(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('setpw-screen').style.display='none';
+  document.getElementById('app-root').style.display='none';
+}
+async function handleLoginSubmit(e){
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error'), btn = document.getElementById('login-submit-btn');
+  errEl.textContent=''; btn.disabled=true; btn.style.opacity='0.6';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled=false; btn.style.opacity='1';
+  if (error){ errEl.textContent = error.message; return; }
+  await onAuthenticated(data.session);
+}
+async function onAuthenticated(session){
+  const { data: profile, error } = await sb.from('profiles')
+    .select('id,email,role').eq('id', session.user.id).single();
+  if (error || !profile){
+    document.getElementById('login-error').textContent='This account has no role assigned yet.';
+    await sb.auth.signOut(); return;
+  }
+  if (profile.role !== 'admin'){
+    document.getElementById('login-error').textContent='This dashboard is for plan administrators. Contractors should use the contractor portal.';
+    await sb.auth.signOut(); return;
+  }
+  me = profile;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-root').style.display='grid';
+  document.getElementById('role-badge').textContent='admin';
+  await loadEstates();
+}
+async function handleLogout(){ await sb.auth.signOut(); location.reload(); }
+
+//  The admin dashboard and the contractor portal are served from the same
+//  domain, so they share one session store. Signing into the portal in another
+//  tab silently swaps the token underneath this page: the interface carries on
+//  looking normal while every request goes out as the contractor, and the first
+//  symptom is an unrelated-looking "row-level security" refusal on a save.
+//  Catching the swap and saying so is far kinder than letting that happen.
+if (sb) sb.auth.onAuthStateChange((event, session) => {
+  if (!me) return;                                   // still on the login screen
+  if (event === 'SIGNED_OUT' || !session){
+    alert('You have been signed out — this usually means another tab signed in with a different account.\n\nThe page will reload.');
+    location.reload(); return;
+  }
+  if (session.user.id !== me.id){
+    alert(`This browser is now signed in as ${session.user.email}, not ${me.email}.\n\n`
+        + 'The two portals share one session on this domain, so signing into the contractor portal here replaced your administrator session. '
+        + 'Anything you save now would be refused.\n\nUse a private window for the contractor portal to keep both open at once.\n\nThe page will reload.');
+    location.reload();
+  }
+});
+
+// ═══ LOAD ═════════════════════════════════════════════════════════════════
+async function loadEstates(){
+  const { data, error } = await sb.from('estates').select('*').order('name');
+  if (error){ alert('Could not load entities — ' + error.message); return; }
+  estates = data || [];
+  const sel = document.getElementById('estate-select');
+  sel.innerHTML = estates.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');
+  if (!estates.length){
+    document.getElementById('roster-body').innerHTML =
+      `<div class="notice n-warn"><i class="ti ti-alert-triangle"></i><div>No entities yet. Open <b>Entities</b> in the sidebar and add the first one.</div></div>`;
+    showEstates();
+    return;
+  }
+  estate = estates[0]; sel.value = estate.id;
+  await loadEstateData();
+  showRoster();
+}
+async function onEstateChange(){
+  estate = estates.find(e => e.id === document.getElementById('estate-select').value);
+  await loadEstateData();
+  showOverview();
+}
+async function loadEstateData(){
+  const [c, p, i] = await Promise.all([
+    sb.from('contractors').select('*').eq('estate_id', estate.id).order('name'),
+    sb.from('pay_periods').select('*').eq('estate_id', estate.id).order('period_start',{ascending:false}),
+    sb.from('invoice_totals').select('*').eq('estate_id', estate.id).order('period_start',{ascending:false})
+  ]);
+  contractors = c.data || []; periods = p.data || []; allInvoices = i.data || [];
+  if (!period || !periods.some(x=>x.id===period.id)) period = pickCurrentPeriod(periods);
+  await loadGlobal();
+
+  const pending = allInvoices.filter(x=>x.status==='submitted').length;
+  const badge = document.getElementById('review-count');
+  badge.style.display = pending ? 'inline-block' : 'none';
+  badge.textContent = pending;
+
+  document.getElementById('hdr-sub').textContent =
+    `${estate.name} · ${contractors.filter(x=>x.active).length} active contractor${contractors.filter(x=>x.active).length===1?'':'s'}`;
+  showOverviewBody();
+}
+
+// Every estate at once — the roster and the accounting export are deliberately
+// portfolio-wide, so a single file covers the whole payment run.
+async function loadGlobal(){
+  const [c, p, i, b] = await Promise.all([
+    sb.from('contractors').select('*').order('name'),
+    sb.from('pay_periods').select('*').order('period_start',{ascending:false}),
+    sb.from('invoice_totals').select('*').order('period_start',{ascending:false}),
+    sb.from('pending_bank_changes').select('*').order('created_at',{ascending:false})
+  ]);
+  gContractors = c.data || []; gPeriods = p.data || []; gInvoices = i.data || [];
+  bankAlerts = b.data || [];
+  if (!rosterKey || !monthOptions().some(m=>m.key===rosterKey))
+    rosterKey = defaultRosterKey();
+}
+
+//  The billing period to land on, given a list ordered newest-first. Periods
+//  are created for the whole year ahead, so "the first one" is December — a
+//  month nobody has billed yet, which looks like the system has lost the data.
+function pickCurrentPeriod(list){
+  if (!list || !list.length) return null;
+  const now = new Date();
+  const todayKey = now.getFullYear() * 100 + (now.getMonth() + 1);
+  const key = p => p.pay_year * 100 + p.pay_month;
+  return list.find(p => key(p) === todayKey)      // this month
+      || list.find(p => key(p) <= todayKey)       // else the most recent started
+      || list[list.length - 1];                   // else the nearest upcoming
+}
+
+// Distinct billing months across every estate, newest first.
+function monthOptions(){
+  const seen = new Map();
+  gPeriods.forEach(p=>{
+    const key = `${p.pay_year}-${String(p.pay_month).padStart(2,'0')}`;
+    if (!seen.has(key)) seen.set(key, { key, year:p.pay_year, month:p.pay_month });
+  });
+  return [...seen.values()].sort((a,b)=> b.key.localeCompare(a.key));
+}
+//  Billing periods are seeded for the whole year, so "the newest one defined"
+//  meant landing on December in September — an empty screen that reads as
+//  missing data rather than as a month that has not happened yet. Default to
+//  the month we are actually in.
+function defaultRosterKey(){
+  const opts = monthOptions();
+  if (!opts.length) return null;
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const exact = opts.find(o => o.key === todayKey);
+  if (exact) return exact.key;
+  //  opts run newest-first, so this is the most recent month already under way.
+  const started = opts.find(o => o.key <= todayKey);
+  //  Nothing has started yet (an entity set up in advance) — the earliest
+  //  defined month is more useful than the furthest away.
+  return (started || opts[opts.length - 1]).key;
+}
+
+function rosterMonth(){
+  const opts = monthOptions();
+  const m = opts.find(x => x.key === rosterKey);
+  if (m) return m;
+  const k = defaultRosterKey();
+  return opts.find(x => x.key === k) || opts[0] || null;
+}
+const estateName = id => (estates.find(e=>e.id===id) || {}).name || '—';
+
+// ═══ VIEW 1 · MONTHLY SUMMARY (home) ══════════════════════════════════════
+function showOverview(){ setNav('nav-overview'); setView('view-overview');
+  document.getElementById('hdr-title').textContent='Monthly Summary';
+  showOverviewBody(); }
+
+function showOverviewBody(){
+  const el = document.getElementById('overview-body');
+  const acts = document.getElementById('hdr-actions');
+  if (!periods.length){
+    el.innerHTML = `<div class="notice n-warn"><i class="ti ti-alert-triangle"></i><div>No billing periods defined for ${esc(estate.name)}. Add one under Billing Periods.</div></div>`;
+    acts.innerHTML=''; return;
+  }
+  acts.innerHTML = `<button class="btn-sm btn-out" onclick="showRoster(true)"><i class="ti ti-file-spreadsheet"></i> Export for Accounting</button>`;
+
+  const rowsForPeriod = contractors.filter(c=>c.active).map(c=>{
+    const inv = allInvoices.find(i => i.contractor_id===c.id && i.pay_period_id===period.id);
+    return { c, inv };
+  });
+
+  const totHours = rowsForPeriod.reduce((s,r)=>s+(r.inv?Number(r.inv.total_hours):0),0);
+  const totDue   = rowsForPeriod.reduce((s,r)=>s+(r.inv?Number(r.inv.total_due):0),0);
+  const filed    = rowsForPeriod.filter(r=>r.inv && Number(r.inv.entry_count)>0).length;
+  const pending  = rowsForPeriod.filter(r=>r.inv && r.inv.status==='submitted').length;
+
+  // Rolling 12 months ending at the selected period.
+  const idx = periods.findIndex(p=>p.id===period.id);
+  const window12 = periods.slice(idx, idx+12).map(p=>p.id);
+  const roll = allInvoices.filter(i=>window12.includes(i.pay_period_id));
+  const rollDue = roll.reduce((s,i)=>s+Number(i.total_due),0);
+  const rollHrs = roll.reduce((s,i)=>s+Number(i.total_hours),0);
+
+  el.innerHTML = `
+    <div class="section-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">Billing Period</div>
+        <select class="status-select" onchange="onPeriodChange(this.value)">
+          ${periods.map(p=>`<option value="${p.id}" ${p.id===period.id?'selected':''}>${esc(p.label)}</option>`).join('')}
+        </select>
+        ${period.status==='closed'?'<span class="badge b-draft">Closed</span>':''}
+      </div>
+      ${pending?`<button class="btn-sm btn-teal" onclick="showReview()"><i class="ti ti-checkbox"></i> ${pending} awaiting review</button>`:''}
+    </div>
+
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">Total Hours</div><div class="sum-val">${hrs(totHours)}</div><div class="sum-sub">${MON[period.pay_month]} ${period.pay_year}</div></div>
+      <div class="sum-box"><div class="sum-label">Invoices Filed</div><div class="sum-val">${filed} <span style="font-size:15px;color:var(--sky-txt)">/ ${rowsForPeriod.length}</span></div><div class="sum-sub">${pending?pending+' awaiting review':'none awaiting review'}</div></div>
+      <div class="sum-box accent"><div class="sum-label">Total Due This Month</div><div class="sum-val">${money(totDue)}</div><div class="sum-sub">${esc(period.label)}</div></div>
+      <div class="sum-box"><div class="sum-label">Rolling 12 Months</div><div class="sum-val">${money(rollDue)}</div><div class="sum-sub">${hrs(rollHrs)} hours across ${Math.min(12,periods.length-idx)} periods</div></div>
+    </div>
+
+    <table class="client-table">
+      <thead><tr>
+        <th>1099 Contractor</th><th class="num">Hours</th><th class="num">Rate</th>
+        <th class="num">Subtotal</th><th class="num">Adj.</th><th class="num">Total Due</th>
+        <th>Status</th><th style="width:30px"></th>
+      </tr></thead>
+      <tbody>
+        ${rowsForPeriod.map(({c,inv})=>`
+          <tr class="clickable" onclick="showDetail('${c.id}')">
+            <td style="font-weight:500">${esc(c.name)}${c.business_name?`<div style="font-size:10px;color:var(--td);font-weight:400">${esc(c.business_name)}</div>`:''}${c.role_title?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">${esc(c.role_title)}</div>`:''}</td>
+            <td class="num">${inv?hrs(inv.total_hours):'—'}</td>
+            <td class="num">${money(inv?inv.rate_snapshot:c.rate)}</td>
+            <td class="num">${inv?money(inv.subtotal):'—'}</td>
+            <td class="num">${inv&&Number(inv.adjustments_total)?money(inv.adjustments_total):'—'}</td>
+            <td class="num" style="font-weight:600">${inv?money(inv.total_due):'—'}</td>
+            <td>${statusBadge(inv?inv.status:'none')}</td>
+            <td style="color:var(--sky-txt)"><i class="ti ti-chevron-right"></i></td>
+          </tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="totals-row">
+        <td>Total</td><td class="num">${hrs(totHours)}</td><td></td><td></td><td></td>
+        <td class="num">${money(totDue)}</td><td colspan="2"></td>
+      </tr></tfoot>
+    </table>
+
+    <div style="margin-top:14px">
+      ${renderEstateTrend()}
+    </div>`;
+  bindChartHovers();
+}
+function onPeriodChange(id){ period = periods.find(p=>p.id===id); showOverviewBody(); }
+
+function renderEstateTrend(){
+  const series = periods.slice(0,12).reverse().map(p=>{
+    const inv = allInvoices.filter(i=>i.pay_period_id===p.id);
+    return { label: MON[p.pay_month]+' '+String(p.pay_year).slice(2), full:p.label,
+             hours: inv.reduce((s,i)=>s+Number(i.total_hours),0),
+             amount:inv.reduce((s,i)=>s+Number(i.total_due),0) };
+  }).filter(d=>d.hours>0);
+  if (series.length < 2) return '';
+  return `<div class="chart-grid">
+    ${barCard('Entity Hours by Month', series, 'hours', estate.name)}
+    ${barCard('Entity Cost by Month', series, 'amount', estate.name)}
+  </div>`;
+}
+
+// ═══ VIEW 2 · REVIEW QUEUE ════════════════════════════════════════════════
+function showReview(){
+  setNav('nav-review'); setView('view-review');
+  document.getElementById('hdr-title').textContent='Review Queue';
+  document.getElementById('hdr-actions').innerHTML='';
+  const queue = allInvoices.filter(i=>i.status==='submitted')
+    .sort((a,b)=> new Date(a.submitted_at||0) - new Date(b.submitted_at||0));
+  const el = document.getElementById('review-body');
+  if (!queue.length){
+    el.innerHTML = `<div class="notice n-good"><i class="ti ti-circle-check"></i><div>Nothing awaiting review. Every submitted invoice has been actioned.</div></div>
+      ${renderApprovedQueue()}`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="notice n-warn"><i class="ti ti-clock"></i><div><b>${queue.length} invoice${queue.length===1?'':'s'} awaiting your review.</b> Open one to read the line-item detail before filing or returning it.</div></div>
+    <div class="section-hdr">
+      <div class="section-title">Awaiting Review</div>
+      ${queue.length>1?`<button class="btn-sm btn-green" onclick="fileAllSubmitted()"><i class="ti ti-checks"></i> File all ${queue.length} for payment</button>`:''}
+    </div>
+    <table class="client-table">
+      <thead><tr><th>Contractor</th><th>Billing Period</th><th class="num">Lines</th><th class="num">Hours</th><th class="num">Amount</th><th>Submitted</th><th>Detail</th><th style="width:200px"></th></tr></thead>
+      <tbody>${queue.map(i=>{
+        return `<tr>
+          <td style="font-weight:500;cursor:pointer" onclick="showDetail('${i.contractor_id}')">${esc(i.contractor_name)}</td>
+          <td>${esc(i.period_label)}</td>
+          <td class="num">${i.entry_count}</td>
+          <td class="num">${hrs(i.total_hours)}</td>
+          <td class="num" style="font-weight:600">${money(i.total_due)}</td>
+          <td style="color:var(--gray)">${dt(i.submitted_at)}</td>
+          <td><button class="btn-sm btn-gray btn-xs" onclick="showDetail('${i.contractor_id}','${i.pay_period_id}')"><i class="ti ti-eye"></i> Open</button></td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn-sm btn-red btn-xs" onclick="openReject('${i.invoice_id}')"><i class="ti ti-arrow-back-up"></i> Return</button>
+            <button class="btn-sm btn-green btn-xs" onclick="fileInvoice('${i.invoice_id}')"><i class="ti ti-check"></i> File</button>
+          </td></tr>`;
+      }).join('')}</tbody>
+    </table>
+    ${renderApprovedQueue()}`;
+}
+function renderApprovedQueue(){
+  const approved = allInvoices.filter(i=>i.status==='approved');
+  if (!approved.length) return '';
+  const tot = approved.reduce((s,i)=>s+Number(i.total_due),0);
+  return `<div class="section-hdr" style="margin-top:22px">
+      <div class="section-title">Filed — Awaiting Payment</div>
+      <div style="font-size:12px;color:var(--gray)">${money(tot)} across ${approved.length} invoice${approved.length===1?'':'s'}</div>
+    </div>
+    <table class="client-table">
+      <thead><tr><th>Contractor</th><th>Billing Period</th><th class="num">Hours</th><th class="num">Amount</th><th>Filed</th><th style="width:140px"></th></tr></thead>
+      <tbody>${approved.map(i=>`<tr>
+        <td style="font-weight:500">${esc(i.contractor_name)}</td><td>${esc(i.period_label)}</td>
+        <td class="num">${hrs(i.total_hours)}</td><td class="num" style="font-weight:600">${money(i.total_due)}</td>
+        <td style="color:var(--gray)">${dt(i.approved_at)}</td>
+        <td style="text-align:right"><button class="btn-sm btn-green btn-xs" onclick="openPaid('${i.invoice_id}')"><i class="ti ti-cash"></i> Mark Paid</button></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ── invoice actions ───────────────────────────────────────────────────────
+async function fileInvoice(invoiceId){
+  const inv = allInvoices.find(i=>i.invoice_id===invoiceId);
+  if (!confirm(`File this invoice for payment?\n\n${inv.contractor_name} — ${inv.period_label}\n${hrs(inv.total_hours)} hours · ${money(inv.total_due)}\n\nThe contractor will see it as filed and it can no longer be edited.`)) return;
+  const { error } = await sb.from('invoices').update({ status:'approved' }).eq('id', invoiceId);
+  if (error){ alert('Could not file — ' + error.message); return; }
+  await loadEstateData(); refreshCurrentView();
+}
+async function fileAllSubmitted(){
+  const queue = allInvoices.filter(i=>i.status==='submitted');
+  const total = queue.reduce((s,i)=>s+Number(i.total_due),0);
+  const detail = queue.map(i=>`  ${i.contractor_name} — ${i.period_label} — ${money(i.total_due)}`).join('\n');
+  if (!confirm(`File all ${queue.length} submitted invoices for payment?\n\n${detail}\n\nTotal: ${money(total)}\n\nThis skips reading the line-item detail. Only do it for invoices you have already reviewed.`)) return;
+
+  const ids = queue.map(i=>i.invoice_id);
+  const { error } = await sb.from('invoices').update({ status:'approved' }).in('id', ids);
+  if (error){ alert('Could not file them — ' + error.message); return; }
+  await loadEstateData(); showReview();
+}
+
+function openReject(invoiceId){
+  rejectTarget = allInvoices.find(i=>i.invoice_id===invoiceId);
+  const thin = [];
+  document.getElementById('mr-body').innerHTML = `
+    <div class="card" style="margin-bottom:14px"><div class="card-body">
+      <div class="info-row"><span class="info-label">Contractor</span><span class="info-val">${esc(rejectTarget.contractor_name)}</span></div>
+      <div class="info-row"><span class="info-label">Billing period</span><span class="info-val">${esc(rejectTarget.period_label)}</span></div>
+      <div class="info-row"><span class="info-label">Amount</span><span class="info-val">${money(rejectTarget.total_due)}</span></div>
+    </div></div>
+    <div class="field-group">
+      <div class="field-label">What needs to be corrected</div>
+      <textarea class="field-input" id="reject-reason" placeholder="Be specific — the contractor sees this text verbatim and it is the only guidance they get. e.g. “Lines 4, 9 and 12 describe only ‘tracker update’. Entity records need the subject matter and who it was for.”"></textarea>
+      <div class="field-hint">This is stored on the invoice as a permanent part of the record.</div>
+    </div>
+    <div class="notice n-warn" style="margin-bottom:0"><i class="ti ti-info-circle"></i><div>Returning the invoice unlocks it for the contractor to edit and resubmit.</div></div>`;
+  openModal('modal-reject');
+}
+async function confirmReject(){
+  const reason = document.getElementById('reject-reason').value.trim();
+  if (!reason){ alert('Enter what needs to be corrected — the contractor has nothing to act on without it.'); return; }
+  const { error } = await sb.from('invoices')
+    .update({ status:'rejected', rejection_reason: reason }).eq('id', rejectTarget.invoice_id);
+  if (error){ alert('Could not return the invoice — ' + error.message); return; }
+  closeModal('modal-reject');
+  await loadEstateData(); refreshCurrentView();
+}
+function openPaid(invoiceId){
+  paidTarget = allInvoices.find(i=>i.invoice_id===invoiceId);
+  document.getElementById('mpay-body').innerHTML = `
+    <div class="card" style="margin-bottom:14px"><div class="card-body">
+      <div class="info-row"><span class="info-label">Contractor</span><span class="info-val">${esc(paidTarget.contractor_name)}</span></div>
+      <div class="info-row"><span class="info-label">Billing period</span><span class="info-val">${esc(paidTarget.period_label)}</span></div>
+      <div class="info-row"><span class="info-label">Amount</span><span class="info-val">${money(paidTarget.total_due)}</span></div>
+    </div></div>
+    <div class="field-group"><div class="field-label">Payment reference</div>
+      <input class="field-input" id="paid-ref" placeholder="ACH batch / wire confirmation / check number">
+      <div class="field-hint">Optional, but it is what ties this invoice to the bank record later.</div></div>`;
+  openModal('modal-paid');
+}
+async function confirmPaid(){
+  const ref = document.getElementById('paid-ref').value.trim();
+  const { error } = await sb.from('invoices')
+    .update({ status:'paid', paid_reference: ref || null }).eq('id', paidTarget.invoice_id);
+  if (error){ alert('Could not record payment — ' + error.message); return; }
+  closeModal('modal-paid');
+  await loadEstateData(); refreshCurrentView();
+}
+
+// ── adjustments (the old "+15 wire fee") ──────────────────────────────────
+function openAdjust(invoiceId){
+  adjustTarget = allInvoices.find(i=>i.invoice_id===invoiceId);
+  renderAdjustBody(Array.isArray(adjustTarget.adjustments)?adjustTarget.adjustments:[]);
+  openModal('modal-adjust');
+}
+function renderAdjustBody(list){
+  document.getElementById('ma-body').innerHTML = `
+    <div class="field-hint" style="margin-bottom:10px">Line items added to the invoice total — wire fees, reimbursements, holdbacks. Use a negative amount to deduct.</div>
+    <div id="adj-rows">${list.map((a,i)=>adjRow(a,i)).join('')}</div>
+    <button class="btn-sm btn-gray" style="margin-top:8px" onclick="addAdjRow()"><i class="ti ti-plus"></i> Add Line</button>`;
+}
+function adjRow(a,i){
+  return `<div class="field-grid" style="grid-template-columns:1fr 120px 32px;gap:8px;margin-bottom:8px" data-adj>
+    <input class="field-input" placeholder="Description, e.g. Wire fee" value="${esc(a.label||'')}" data-adj-label>
+    <input class="field-input num" type="number" step="0.01" placeholder="0.00" value="${a.amount??''}" data-adj-amount>
+    <button class="btn-sm btn-gray" onclick="this.parentNode.remove()" title="Remove"><i class="ti ti-trash"></i></button>
+  </div>`;
+}
+function addAdjRow(){
+  document.getElementById('adj-rows').insertAdjacentHTML('beforeend', adjRow({},0));
+}
+async function saveAdjustments(){
+  const rows = [...document.querySelectorAll('#adj-rows [data-adj]')].map(r=>({
+    label: r.querySelector('[data-adj-label]').value.trim(),
+    amount: Number(r.querySelector('[data-adj-amount]').value) || 0
+  })).filter(a=>a.label || a.amount);
+  const { error } = await sb.from('invoices').update({ adjustments: rows }).eq('id', adjustTarget.invoice_id);
+  if (error){ alert('Could not save adjustments — ' + error.message); return; }
+  closeModal('modal-adjust');
+  await loadEstateData(); refreshCurrentView();
+}
+
+// ═══ VIEW 3 · CONTRACTOR DRILL-DOWN ═══════════════════════════════════════
+async function showDetail(contractorId, periodId){
+  detailContractor = contractors.find(c=>c.id===contractorId);
+  if (!detailContractor) return;
+  setView('view-detail');
+  document.getElementById('hdr-title').textContent = detailContractor.name;
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-out" onclick="showTrend('${contractorId}')"><i class="ti ti-chart-bar"></i> Hours &amp; Cost Trend</button>
+     <button class="btn-sm btn-gray" onclick="window.print()"><i class="ti ti-printer"></i> Print / PDF</button>
+     <button class="btn-sm btn-gray" onclick="openContractor('${contractorId}')"><i class="ti ti-edit"></i> Edit Record</button>`;
+
+  const targetPeriod = periodId || (period ? period.id : null);
+  const mine = allInvoices.filter(i=>i.contractor_id===contractorId);
+  const current = mine.find(i=>i.pay_period_id===targetPeriod);
+
+  let entriesHtml = `<div class="empty-note">No invoice on file for ${esc(period?period.label:'this period')}.</div>`;
+  if (current){
+    const [te, ev] = await Promise.all([
+      sb.from('time_entries').select('*')
+        .eq('invoice_id', current.invoice_id).order('entry_date').order('created_at'),
+      sb.from('invoice_events').select('*')
+        .eq('invoice_id', current.invoice_id).order('created_at', { ascending:false })
+    ]);
+    entriesHtml = renderInvoiceDetail(current, te.data||[], ev.data||[]);
+  }
+
+  const ytd = mine.filter(i=>i.pay_year === (period?period.pay_year:new Date().getFullYear()));
+  const roll = mine.slice(0,12);
+
+  document.getElementById('detail-body').innerHTML = `
+    <button class="back-btn" onclick="showOverview()"><i class="ti ti-arrow-left"></i> Back to Monthly Summary</button>
+
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">Pay Rate</div><div class="sum-val">${money(detailContractor.rate).replace(/\.00$/,'')}</div><div class="sum-sub">per hour</div></div>
+      <div class="sum-box"><div class="sum-label">Contract Term</div><div class="sum-val" style="font-size:15px;padding-top:6px">${detailContractor.contract_start?dt(detailContractor.contract_start):'—'} → ${detailContractor.contract_end?dt(detailContractor.contract_end):'ongoing'}</div><div class="sum-sub">${detailContractor.w9_on_file?'W-9 on file':'<span style="color:var(--red)">No W-9 on file</span>'}</div></div>
+      <div class="sum-box"><div class="sum-label">${period?period.pay_year:''} To Date</div><div class="sum-val">${money(ytd.reduce((s,i)=>s+Number(i.total_due),0))}</div><div class="sum-sub">${hrs(ytd.reduce((s,i)=>s+Number(i.total_hours),0))} hours</div></div>
+      <div class="sum-box accent"><div class="sum-label">Rolling 12 Months</div><div class="sum-val">${money(roll.reduce((s,i)=>s+Number(i.total_due),0))}</div><div class="sum-sub">${hrs(roll.reduce((s,i)=>s+Number(i.total_hours),0))} hours</div></div>
+    </div>
+
+    <div class="section-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">Invoice Detail</div>
+        <select class="status-select" onchange="showDetail('${contractorId}', this.value)">
+          ${periods.map(p=>`<option value="${p.id}" ${p.id===targetPeriod?'selected':''}>${esc(p.label)}</option>`).join('')}
+        </select>
+      </div>
+      ${current?`<div style="display:flex;gap:8px">
+        <button class="btn-sm btn-gray" onclick="openAdjust('${current.invoice_id}')"><i class="ti ti-plus-minus"></i> Adjustments</button>
+        ${current.status==='submitted'?`
+          <button class="btn-sm btn-red" onclick="openReject('${current.invoice_id}')"><i class="ti ti-arrow-back-up"></i> Return</button>
+          <button class="btn-sm btn-green" onclick="fileInvoice('${current.invoice_id}')"><i class="ti ti-check"></i> File for Payment</button>`:''}
+        ${current.status==='approved'?`<button class="btn-sm btn-green" onclick="openPaid('${current.invoice_id}')"><i class="ti ti-cash"></i> Mark Paid</button>`:''}
+      </div>`:''}
+    </div>
+    ${entriesHtml}
+
+    <div class="section-hdr" style="margin-top:22px"><div class="section-title">Invoice History</div></div>
+    ${mine.length?`<table class="client-table">
+      <thead><tr><th>Billing Period</th><th class="num">Lines</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th><th>Status</th><th>Filed</th><th>Paid</th></tr></thead>
+      <tbody>${mine.map(i=>`<tr class="clickable" onclick="showDetail('${contractorId}','${i.pay_period_id}')">
+        <td style="font-weight:500">${esc(i.period_label)}</td><td class="num">${i.entry_count}</td>
+        <td class="num">${hrs(i.total_hours)}</td><td class="num">${money(i.rate_snapshot)}</td>
+        <td class="num" style="font-weight:500">${money(i.total_due)}</td><td>${statusBadge(i.status)}</td>
+        <td style="color:var(--gray)">${dt(i.approved_at)}</td><td style="color:var(--gray)">${dt(i.paid_at)}</td>
+      </tr>`).join('')}</tbody></table>`
+      : `<div class="empty-note">No invoices on file for this contractor yet.</div>`}`;
+}
+
+// ── line-item integrity checks ────────────────────────────────────────────
+//  Entries carry a date and a duration but no clock times, so true overlap is
+//  not computable. What IS computable — and what actually gets challenged — is
+//  the same work billed twice on a day, and days that total more hours than a
+//  contractor plausibly worked.
+const normDesc = s => (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const LONG_DAY_MINUTES = 720;   // 12 hours
+
+function entryFlags(rows){
+  const dupes = new Map();       // row id -> reason
+  const byKey = new Map();
+  rows.forEach(r=>{
+    const key = r.entry_date + '|' + normDesc(r.description);
+    if (!normDesc(r.description)) return;
+    if (byKey.has(key)){
+      dupes.set(r.id, 'duplicate');
+      dupes.set(byKey.get(key), 'duplicate');
+    } else byKey.set(key, r.id);
+  });
+
+  const byDay = new Map();
+  rows.forEach(r=>byDay.set(r.entry_date, (byDay.get(r.entry_date)||0) + Number(r.invoiced_minutes||0)));
+  const longDays = [...byDay.entries()].filter(([,m])=>m > LONG_DAY_MINUTES)
+    .map(([d,m])=>({ date:d, hours:m/60 }));
+
+  return { dupes, longDays, dupeCount: new Set([...dupes.keys()]).size };
+}
+
+function renderInvoiceDetail(inv, rows, events){
+  const thin = rows.filter(r=>(r.description||'').trim().length < THIN_DESC);
+  const adj = Array.isArray(inv.adjustments)?inv.adjustments:[];
+  const flags = entryFlags(rows);
+  return `
+    <div class="print-only print-head">
+      <div class="print-title">${esc(inv.estate_name)}</div>
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray)">1099 Contractor Invoice</div>
+      <div class="print-meta">
+        <div><div class="k">Contractor</div>${esc(inv.contractor_name)}</div>
+        <div><div class="k">Billing Period</div>${esc(inv.period_label)}</div>
+        <div><div class="k">Status</div>${esc(inv.status)}</div>
+        <div><div class="k">Total Hours</div>${hrs(inv.total_hours)}</div>
+        <div><div class="k">Rate</div>${money(inv.rate_snapshot)} / hour</div>
+        <div><div class="k">Total Amount Due</div><b>${money(inv.total_due)}</b></div>
+      </div>
+    </div>
+    ${flags.dupeCount||flags.longDays.length?`<div class="notice n-warn"><i class="ti ti-copy"></i><div>
+      ${flags.dupeCount?`<b>${flags.dupeCount} line${flags.dupeCount===1?'':'s'} appear${flags.dupeCount===1?'s':''} to be billed twice</b> — same date, same description. Marked below.`:''}
+      ${flags.dupeCount&&flags.longDays.length?'<br>':''}
+      ${flags.longDays.length?`<b>${flags.longDays.length} day${flags.longDays.length===1?'':'s'} over 12 hours:</b> ${flags.longDays.map(d=>`${d.date} (${hrs(d.hours)}h)`).join(', ')}.`:''}
+    </div></div>`:''}
+    ${inv.status==='rejected'?`<div class="notice n-bad"><i class="ti ti-arrow-back-up"></i><div><b>Returned ${dt(inv.rejected_at)}</b><div style="color:var(--blk);white-space:pre-wrap;margin-top:4px">${esc(inv.rejection_reason||'')}</div></div></div>`:''}
+    ${inv.contractor_notes?`<div class="notice n-info"><i class="ti ti-message"></i><div><b>Note from ${esc(inv.contractor_name)}:</b> ${esc(inv.contractor_notes)}</div></div>`:''}
+    ${thin.length?`<div class="notice n-warn"><i class="ti ti-file-alert"></i><div><b>${thin.length} description${thin.length===1?'':'s'} under ${THIN_DESC} characters.</b> Flagged below — thin narrative is what gets challenged on a fee application.</div></div>`:''}
+    <div class="card" style="margin-bottom:12px"><div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+      <div><div class="sum-label">Status</div><div style="margin-top:3px">${statusBadge(inv.status)}</div></div>
+      <div><div class="sum-label">Submitted</div><div style="margin-top:3px;font-size:12px">${dt(inv.submitted_at)}</div></div>
+      <div><div class="sum-label">Hours × Rate</div><div style="margin-top:3px;font-size:12px">${hrs(inv.total_hours)} × ${money(inv.rate_snapshot)} = ${money(inv.subtotal)}</div></div>
+      <div><div class="sum-label">Total Due</div><div style="margin-top:3px;font-size:14px;font-weight:600">${money(inv.total_due)}</div></div>
+    </div></div>
+    ${adj.length?`<div class="card" style="margin-bottom:12px"><div class="card-hdr"><div class="card-title">Adjustments</div></div><div class="card-body">
+      ${adj.map(a=>`<div class="info-row"><span class="info-label">${esc(a.label||'Adjustment')}</span><span class="info-val">${money(a.amount)}</span></div>`).join('')}</div></div>`:''}
+    <table class="client-table" style="table-layout:fixed">
+      <colgroup><col style="width:104px"><col style="width:70px"><col><col style="width:76px"><col style="width:66px"></colgroup>
+      <thead><tr><th>Date</th><th class="num">Minutes</th><th>Detailed Description of Work Completed</th><th class="num">Invoiced</th><th class="num">Hours</th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>{
+        const isThin = (r.description||'').trim().length < THIN_DESC;
+        const isDupe = flags.dupes.has(r.id);
+        return `<tr${isDupe?' style="background:var(--ab)"':''}>
+          <td>${r.entry_date}</td><td class="num">${r.minutes}</td>
+          <td style="font-weight:300;white-space:pre-wrap">${esc(r.description)}${isThin?' <span class="thin-flag">· thin</span>':''}${isDupe?' <span class="thin-flag" style="color:var(--red)">· possible duplicate</span>':''}</td>
+          <td class="num">${r.invoiced_minutes}</td><td class="num">${hrs(r.hours)}</td></tr>`;
+      }).join('')
+      :`<tr><td colspan="5"><div class="empty-note">No line items recorded.</div></td></tr>`}</tbody>
+      <tfoot><tr class="totals-row">
+        <td colspan="3" style="text-align:right;letter-spacing:0.08em;text-transform:uppercase;font-size:10px;color:var(--gray)">Total Hours for Month</td>
+        <td class="num">${inv.total_invoiced_minutes}</td><td class="num">${hrs(inv.total_hours)}</td>
+      </tr></tfoot>
+    </table>
+    ${renderAuditTrail(events)}`;
+}
+
+// ── audit trail ───────────────────────────────────────────────────────────
+//  Edits made after submission are the ones that matter, so they are called
+//  out rather than buried in the list.
+function renderAuditTrail(events){
+  if (!events || !events.length) return '';
+  const post = events.filter(e =>
+    ['entry_added','entry_edited','entry_deleted'].includes(e.event) &&
+    ['submitted','approved','paid'].includes((e.detail||{}).invoice_status));
+
+  const line = e => {
+    const d = e.detail || {};
+    switch (e.event){
+      case 'created':         return `Invoice opened`;
+      case 'status_change':   return `Status ${esc(d.from)} → <b>${esc(d.to)}</b>${d.reason?` — “${esc(d.reason)}”`:''}`;
+      case 'adjustments_changed': return `Adjustments changed`;
+      case 'entry_added':     return `Line added — ${esc(d.date)}, ${d.minutes} min — “${esc(d.description)}”`;
+      case 'entry_deleted':   return `Line deleted — ${esc(d.date)}, ${d.minutes} min — “${esc(d.description)}”`;
+      case 'entry_edited':    {
+        const f = d.from||{}, t = d.to||{};
+        const bits = [];
+        if (f.date !== t.date)             bits.push(`date ${esc(f.date)} → ${esc(t.date)}`);
+        if (f.minutes !== t.minutes)       bits.push(`${f.minutes} → ${t.minutes} min`);
+        if (f.description !== t.description) bits.push(`“${esc(f.description)}” → “${esc(t.description)}”`);
+        return `Line edited — ${bits.join('; ')}`;
+      }
+      default: return esc(e.event);
+    }
+  };
+
+  return `
+    <div class="card" style="margin-top:16px">
+      <div class="card-hdr">
+        <div class="card-title">Audit Trail</div>
+        <div style="font-size:11px;color:var(--gray)">${events.length} event${events.length===1?'':'s'}${post.length?` · <span style="color:var(--red);font-weight:600">${post.length} after submission</span>`:''}</div>
+      </div>
+      <div class="card-body" style="max-height:290px;overflow-y:auto;padding:0">
+        <table class="client-table" style="border:none">
+          <tbody>${events.map(e=>{
+            const late = ['entry_added','entry_edited','entry_deleted'].includes(e.event) &&
+                         ['submitted','approved','paid'].includes((e.detail||{}).invoice_status);
+            return `<tr${late?' style="background:var(--rb)"':''}>
+              <td style="white-space:nowrap;color:var(--gray);width:150px">${new Date(e.created_at).toLocaleString()}</td>
+              <td style="white-space:nowrap;color:var(--gray);width:180px">${esc(e.actor_email||'—')}</td>
+              <td style="font-weight:300">${line(e)}${late?' <span class="thin-flag" style="color:var(--red)">· post-submission</span>':''}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ═══ VIEW 4 · CONTRACTOR TREND ════════════════════════════════════════════
+function showTrend(contractorId){
+  const c = contractors.find(x=>x.id===contractorId) || detailContractor;
+  setView('view-trend');
+  document.getElementById('hdr-title').textContent = c.name + ' — Trend';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-gray" onclick="showDetail('${c.id}')"><i class="ti ti-arrow-left"></i> Back to Invoice Detail</button>`;
+
+  const mine = allInvoices.filter(i=>i.contractor_id===c.id && Number(i.total_hours)>0)
+    .slice(0,12).reverse()
+    .map(i=>({ label: MON[i.pay_month]+' '+String(i.pay_year).slice(2), full:i.period_label,
+               hours:Number(i.total_hours), amount:Number(i.total_due), status:i.status }));
+
+  const el = document.getElementById('trend-body');
+  if (mine.length < 1){
+    el.innerHTML = `<button class="back-btn" onclick="showDetail('${c.id}')"><i class="ti ti-arrow-left"></i> Back</button>
+      <div class="empty-note">No billed months yet for ${esc(c.name)} — the trend appears once an invoice carries time.</div>`;
+    return;
+  }
+  const totH = mine.reduce((s,d)=>s+d.hours,0), totA = mine.reduce((s,d)=>s+d.amount,0);
+  el.innerHTML = `
+    <button class="back-btn" onclick="showDetail('${c.id}')"><i class="ti ti-arrow-left"></i> Back to Invoice Detail</button>
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">Rolling 12 · Hours</div><div class="sum-val">${hrs(totH)}</div><div class="sum-sub">${mine.length} billed month${mine.length===1?'':'s'}</div></div>
+      <div class="sum-box"><div class="sum-label">Rolling 12 · Cost</div><div class="sum-val">${money(totA)}</div><div class="sum-sub">to the entity</div></div>
+      <div class="sum-box"><div class="sum-label">Average Month</div><div class="sum-val">${hrs(totH/mine.length)}</div><div class="sum-sub">hours</div></div>
+      <div class="sum-box accent"><div class="sum-label">Average Month</div><div class="sum-val">${money(totA/mine.length)}</div><div class="sum-sub">cost</div></div>
+    </div>
+    <div class="chart-grid">
+      ${barCard('Hours by Month', mine, 'hours', c.name)}
+      ${barCard('Cost by Month', mine, 'amount', c.name)}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Month by Month</div></div>
+      <table class="client-table" style="border:none">
+        <thead><tr><th>Billing Period</th><th class="num">Hours</th><th class="num">Cost</th><th>Status</th></tr></thead>
+        <tbody>${mine.slice().reverse().map(d=>`<tr><td>${esc(d.full)}</td><td class="num">${hrs(d.hours)}</td>
+          <td class="num">${money(d.amount)}</td><td>${statusBadge(d.status)}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  bindChartHovers();
+}
+
+// ═══ VIEW · ONBOARDING ════════════════════════════════════════════════════
+//  The board is a view that masks account digits, so nothing a contractor
+//  submitted reaches this browser in full until it has been approved.
+let onboarding = [];
+
+async function loadOnboarding(){
+  const { data, error } = await sb.from('onboarding_board').select('*');
+  if (error){ console.error(error); onboarding = []; return; }
+  onboarding = data || [];
+  const open = onboarding.filter(o => o.status !== 'active').length;
+  const badge = document.getElementById('onboard-count');
+  if (badge){ badge.style.display = open ? 'inline-block' : 'none'; badge.textContent = open; }
+}
+
+const OB_STEPS = [
+  ['Invited',   o => o.invited_at],
+  ['Account',   o => o.account_created_at],
+  ['Profile',   o => o.profile_completed_at],
+  ['Agreement', o => o.agreement_signed_at],
+  ['W-9',       o => o.w9_uploaded_at],
+  ['Banking',   o => o.banking_approved_at],
+  ['Active',    o => o.approved_at]
+];
+
+function stepPills(o){
+  let firstOpen = true;
+  return `<div class="steps">${OB_STEPS.map(([label, done])=>{
+    if (done(o)) return `<span class="step-pill sp-done">${label}</span>`;
+    if (firstOpen){ firstOpen = false; return `<span class="step-pill sp-now">${label}</span>`; }
+    return `<span class="step-pill sp-wait">${label}</span>`;
+  }).join('')}</div>`;
+}
+
+async function showOnboarding(){
+  setNav('nav-onboarding'); setView('view-onboarding');
+  document.getElementById('hdr-title').textContent = 'Onboarding';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="openContractor()"><i class="ti ti-user-plus"></i> Add Contractor</button>`;
+  await loadOnboarding();
+  renderOnboarding();
+}
+
+function renderOnboarding(){
+  const el = document.getElementById('onboarding-body');
+  const inFlight  = onboarding.filter(o => !['active'].includes(o.status));
+  const submitted = onboarding.filter(o => o.status === 'submitted');
+  const exceptions= onboarding.filter(o => o.status === 'exception');
+  const banking   = onboarding.filter(o => o.pending_banking_id);
+
+  el.innerHTML = `
+    ${exceptions.length?`<div class="notice n-bad"><i class="ti ti-alert-triangle"></i><div>
+      <b>${exceptions.length} flagged for attention:</b>
+      ${exceptions.map(o=>`${esc(o.contractor_name)} — ${esc(o.exception_note||'no note')}`).join(' · ')}</div></div>`:''}
+    ${banking.length?`<div class="notice n-warn"><i class="ti ti-building-bank"></i><div>
+      <b>${banking.length} set of remittance details awaiting approval.</b>
+      Verify with the contractor by phone before approving — this is the step that stops payment fraud.</div></div>`:''}
+
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">In Progress</div><div class="sum-val">${inFlight.length}</div><div class="sum-sub">not yet active</div></div>
+      <div class="sum-box"><div class="sum-label">Ready to Approve</div><div class="sum-val">${submitted.length}</div><div class="sum-sub">contractor has finished</div></div>
+      <div class="sum-box accent"><div class="sum-label">Banking to Verify</div><div class="sum-val">${banking.length}</div><div class="sum-sub">awaiting your call</div></div>
+      <div class="sum-box"><div class="sum-label">Active</div><div class="sum-val">${onboarding.filter(o=>o.status==='active').length}</div><div class="sum-sub">can record time</div></div>
+    </div>
+
+    <table class="client-table">
+      <thead><tr><th>Entity</th><th>Contractor</th><th style="width:330px">Progress</th><th>Status</th><th style="width:280px"></th></tr></thead>
+      <tbody>${onboarding.length?onboarding
+        .slice().sort((a,b)=> (a.status==='active') - (b.status==='active')
+                              || String(a.estate_name).localeCompare(String(b.estate_name))
+                              || String(a.contractor_name).localeCompare(String(b.contractor_name)))
+        .map(o=>`
+        <tr class="ob-row">
+          <td>${esc(o.estate_name||'—')}</td>
+          <td style="font-weight:500">${esc(o.contractor_name)}
+            <div style="font-size:10px;color:var(--sky-txt);font-weight:300">${esc(o.email)}</div></td>
+          <td>${stepPills(o)}</td>
+          <td>${obStatusBadge(o.status)}</td>
+          <td><div class="ob-actions">${obActions(o)}</div></td>
+        </tr>`).join('')
+        :`<tr><td colspan="5"><div class="empty-note">No contractors yet.</div></td></tr>`}
+      </tbody>
+    </table>
+
+    ${banking.length?`
+      <div class="section-hdr" style="margin-top:22px"><div class="section-title">Remittance Details Awaiting Approval</div></div>
+      <table class="client-table">
+        <thead><tr><th>Contractor</th><th>Method</th><th>Bank</th><th>Account Holder</th><th>Routing</th><th>Account</th><th>Submitted</th><th style="width:190px"></th></tr></thead>
+        <tbody>${banking.map(o=>`<tr>
+          <td style="font-weight:500">${esc(o.contractor_name)}</td>
+          <td>${esc(o.pending_method||'—')}</td>
+          <td>${esc(o.pending_bank||'—')}</td>
+          <td>${esc(o.pending_account_name||'—')}</td>
+          <td class="mask">${esc(o.pending_routing_masked||'—')}</td>
+          <td class="mask">${esc(o.pending_account_masked||'—')}</td>
+          <td style="color:var(--gray)">${dt(o.pending_submitted_at)}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn-sm btn-red btn-xs" onclick="rejectBanking('${o.pending_banking_id}')">Reject</button>
+            <button class="btn-sm btn-green btn-xs" onclick="approveBanking('${o.pending_banking_id}','${esc(o.contractor_name)}')">Approve</button>
+          </td></tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="field-hint" style="margin-top:6px">Only the last four digits are shown here. The full numbers are written to the contractor record on approval and appear in the payment export.</div>
+    `:''}`;
+}
+
+function obStatusBadge(s){
+  const map = { not_started:['b-draft','Not started'], invited:['b-submitted','Invited'],
+                in_progress:['b-submitted','In progress'], submitted:['b-approved','Ready'],
+                active:['b-paid','Active'], exception:['b-rejected','Exception'] };
+  const [cls,label] = map[s] || map.not_started;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function obActions(o){
+  const b = [];
+  if (!o.invited_at)
+    b.push(`<button class="btn-sm btn-teal btn-xs" onclick="inviteContractor('${o.contractor_id}')"><i class="ti ti-mail"></i> Invite</button>`);
+  else if (o.status !== 'active')
+    b.push(`<button class="btn-sm btn-gray btn-xs" onclick="inviteContractor('${o.contractor_id}')" title="Send a fresh link"><i class="ti ti-mail-forward"></i> Resend</button>`);
+
+  if (!o.agreement_signed_at){
+    if (ESIGN)
+      b.push(`<button class="btn-sm ${o.agreement_sent_at?'btn-gray':'btn-out'} btn-xs" onclick="sendAgreement('${o.contractor_id}')">
+        <i class="ti ti-signature"></i> ${o.agreement_sent_at?'Resend agreement':'Send agreement'}</button>`);
+    else
+      //  Without e-signature the agreement travels the same route as the W-9:
+      //  the administrator uploads it, the contractor downloads, signs and
+      //  sends it back. Filing it is what issues it.
+      b.push(`<button class="btn-sm ${o.agreement_sent_at?'btn-gray':'btn-out'} btn-xs" onclick="issueAgreement('${o.contractor_id}')">
+        <i class="ti ti-file-upload"></i> ${o.agreement_sent_at?'Reissue agreement':'Issue agreement'}</button>`);
+  }
+
+  //  The contractor normally starts their own W-9 from the wizard; this is the
+  //  nudge for someone who hasn't.
+  if (ESIGN && !o.w9_uploaded_at && o.invited_at)
+    b.push(`<button class="btn-sm ${o.w9_sent_at?'btn-gray':'btn-out'} btn-xs" onclick="sendW9('${o.contractor_id}')">
+      <i class="ti ti-file-text"></i> ${o.w9_sent_at?'Resend W-9':'Send W-9'}</button>`);
+
+  if (o.status === 'submitted' || (o.status !== 'active' && o.banking_approved_at && o.agreement_signed_at))
+    b.push(`<button class="btn-sm btn-green btn-xs" onclick="activateContractor('${o.contractor_id}','${esc(o.contractor_name)}')"><i class="ti ti-check"></i> Activate</button>`);
+
+  if (o.status !== 'active')
+    b.push(`<button class="btn-sm btn-gray btn-xs" onclick="flagOnboarding('${o.contractor_id}')" title="Flag an exception"><i class="ti ti-flag"></i></button>`);
+
+  b.push(`<button class="btn-sm btn-gray btn-xs" onclick="openContractor('${o.contractor_id}')"><i class="ti ti-edit"></i></button>`);
+  return b.join('');
+}
+
+// ── actions ───────────────────────────────────────────────────────────────
+//  skipConfirm is set when the caller has already asked — adding a contractor
+//  offers the invitation straight away, and asking twice is just friction.
+async function inviteContractor(id, skipConfirm){
+  //  A contractor added moments ago has no onboarding row loaded yet, so fall
+  //  back to the roster for their name and address.
+  const o = onboarding.find(x=>x.contractor_id===id)
+         || gContractors.find(x=>x.id===id)
+         || contractors.find(x=>x.id===id);
+  if (!o){ alert('Could not find that contractor.'); return; }
+  const who   = o.contractor_name || o.name;
+  const where = o.email;
+
+  if (!skipConfirm &&
+      !confirm(`Send a portal invitation to ${who} at ${where}?\n\nThey set their own password — you never see or handle it.`)) return;
+
+  const { data, error } = await sb.functions.invoke('invite-contractor', { body: { contractor_id: id } });
+  if (error || data?.error){
+    alert('Could not send the invitation — ' + (data?.error || error.message)
+      + '\n\nIf the invite-contractor function is not deployed yet, create the login in Supabase Authentication instead.');
+    return;
+  }
+  alert(data.message);
+  await showOnboarding();
+}
+
+//  Opens the document modal already pointed at this contractor with the type
+//  set to Agreement. Saving it files the document and, through the database
+//  trigger, marks the agreement as issued — one action, not two.
+function issueAgreement(id){
+  const o = onboarding.find(x=>x.contractor_id===id);
+  const name = o ? o.contractor_name : '';
+  openContract({
+    contractor_id: id,
+    doc_type: 'Agreement',
+    title: name ? `Independent Contractor Agreement — ${name}` : 'Independent Contractor Agreement'
+  });
+}
+
+async function sendAgreement(id){
+  const o = onboarding.find(x=>x.contractor_id===id);
+  if (!confirm(`Send the contractor agreement to ${o.contractor_name} for signature?`)) return;
+  const { data, error } = await sb.functions.invoke('send-agreement', { body: { contractor_id: id } });
+  if (error || data?.error){ alert('Could not send the agreement — ' + (data?.error || error.message)); return; }
+  alert(data.message);
+  await showOnboarding();
+}
+
+async function sendW9(id){
+  const o = onboarding.find(x=>x.contractor_id===id);
+  if (!confirm(`Send the Form W-9 to ${o.contractor_name} for signature?\n\nThey complete and sign the official IRS form online — nothing to print or scan. Their full tax ID stays in the signed document and never enters this system.`)) return;
+  const { data, error } = await sb.functions.invoke('send-agreement', {
+    body: { contractor_id: id, doc_type: 'w9' }
+  });
+  if (error || data?.error){ alert('Could not send the W-9 — ' + (data?.error || error.message)); return; }
+  alert(data.message);
+  await showOnboarding();
+}
+
+async function approveBanking(pendingId, name){
+  if (!confirm(`Approve these remittance details for ${name}?\n\nOnly do this once you have verified them with the contractor directly — by phone or in person, never by replying to the message that supplied them.\n\nOn approval they become the account the entity pays.`)) return;
+  const { error } = await sb.rpc('approve_banking', { p_id: pendingId });
+  if (error){ alert('Could not approve — ' + error.message); return; }
+  await loadEstateData(); await showOnboarding();
+}
+
+async function rejectBanking(pendingId){
+  const reason = prompt('What should the contractor correct?');
+  if (reason === null) return;
+  if (!reason.trim()){ alert('Give a reason — they only see what you write here.'); return; }
+  const { error } = await sb.rpc('reject_banking', { p_id: pendingId, p_reason: reason.trim() });
+  if (error){ alert('Could not reject — ' + error.message); return; }
+  await showOnboarding();
+}
+
+async function activateContractor(id, name){
+  const o = onboarding.find(x=>x.contractor_id===id);
+  const missing = [];
+  if (!o.agreement_signed_at) missing.push('signed agreement');
+  if (!o.w9_uploaded_at)      missing.push('W-9');
+  if (!o.banking_approved_at) missing.push('approved remittance details');
+  const warn = missing.length ? `\n\nStill outstanding: ${missing.join(', ')}.` : '';
+  if (!confirm(`Activate ${name}?${warn}\n\nThey will be able to record time immediately.`)) return;
+  const { error } = await sb.rpc('activate_contractor', { p_contractor: id });
+  if (error){ alert('Could not activate — ' + error.message); return; }
+  await loadEstateData(); await showOnboarding();
+}
+
+async function flagOnboarding(id){
+  const note = prompt('What needs attention on this onboarding?');
+  if (note === null) return;
+  const { error } = await sb.rpc('flag_onboarding', { p_contractor: id, p_note: note.trim() });
+  if (error){ alert('Could not flag — ' + error.message); return; }
+  await showOnboarding();
+}
+
+// ═══ VIEW · ESTATES ═══════════════════════════════════════════════════════
+//  The estate record carries the account the estate pays contractors FROM,
+//  which is the left-hand side of every row in the payment export.
+let editingEstateId = null;
+
+function showEstates(){
+  setNav('nav-estates'); setView('view-estates');
+  document.getElementById('hdr-title').textContent = 'Entities';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="openEstate()"><i class="ti ti-plus"></i> Add Entity</button>`;
+
+  const year = new Date().getFullYear();
+  document.getElementById('estates-body').innerHTML = `
+    <div class="notice n-info"><i class="ti ti-lock"></i><div>The disbursing account is masked here and written in full only into the payment export. Every change to it is logged.</div></div>
+    <table class="client-table">
+      <thead><tr><th>Entity</th><th>Case No.</th><th>Plan Administrator</th><th>Disbursing Account</th>
+        <th class="num">Contractors</th><th class="num">${year} Billed</th><th>Status</th><th style="width:80px"></th></tr></thead>
+      <tbody>${estates.length?estates.map(e=>{
+        const crew = gContractors.filter(c=>c.estate_id===e.id && c.active).length;
+        const ytd  = gInvoices.filter(i=>i.estate_id===e.id && i.pay_year===year)
+                              .reduce((s,i)=>s+Number(i.total_due),0);
+        const noBank = !e.bank_account_number;
+        return `<tr>
+          <td style="font-weight:500">${esc(e.name)}</td>
+          <td style="color:var(--gray)">${esc(e.case_number||'—')}</td>
+          <td style="color:var(--gray)">${esc(e.plan_administrator||'—')}</td>
+          <td class="mask">${noBank
+            ? '<span style="color:var(--red)">Not set</span>'
+            : esc(e.bank_name||'') + ' ' + mask(e.bank_account_number)}</td>
+          <td class="num">${crew}</td>
+          <td class="num" style="font-weight:500">${money(ytd)}</td>
+          <td>${e.active?'<span class="badge b-approved">Active</span>':'<span class="badge b-draft">Closed</span>'}</td>
+          <td style="text-align:right"><button class="btn-sm btn-gray btn-xs" onclick="openEstate('${e.id}')"><i class="ti ti-edit"></i> Edit</button></td>
+        </tr>`;
+      }).join(''):`<tr><td colspan="8"><div class="empty-note">No entities yet.</div></td></tr>`}</tbody>
+    </table>`;
+}
+
+function openEstate(id){
+  editingEstateId = id || null;
+  const e = id ? (estates.find(x=>x.id===id) || {}) : {};
+  document.getElementById('me-title').textContent = id ? 'Edit Entity' : 'Add Entity';
+  const v = (k) => esc(e[k] ?? '');
+  document.getElementById('me-body').innerHTML = `
+    <div class="fieldset-label">Entity</div>
+    <div class="field-group"><div class="field-label">Entity Name *</div>
+      <input class="field-input" id="e-name" value="${v('name')}" placeholder="e.g. Rhodium Estate"></div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Case Number</div>
+        <input class="field-input" id="e-case" value="${v('case_number')}" placeholder="e.g. 24-90448"></div>
+      <div class="field-group"><div class="field-label">Plan Administrator</div>
+        <input class="field-input" id="e-admin" value="${v('plan_administrator')}"></div>
+    </div>
+
+    <div class="fieldset-label">Disbursing Account</div>
+    <div class="field-hint" style="margin:-6px 0 12px">The account this entity pays contractors from. It appears on every line of the payment export.</div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Bank Name</div>
+        <input class="field-input" id="e-bank" value="${v('bank_name')}"></div>
+      <div class="field-group"><div class="field-label">Account Holder Name</div>
+        <input class="field-input" id="e-acctname" value="${v('bank_account_name')}"></div>
+    </div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Routing Number</div>
+        <input class="field-input" id="e-routing" value="${v('bank_routing')}" autocomplete="off"></div>
+      <div class="field-group"><div class="field-label">Account Number</div>
+        <input class="field-input" id="e-acct" value="${v('bank_account_number')}" autocomplete="off"></div>
+    </div>
+
+    <div class="field-group"><div class="field-label">Status</div>
+      <select class="field-input" id="e-active">
+        <option value="true"  ${e.active!==false?'selected':''}>Active</option>
+        <option value="false" ${e.active===false?'selected':''}>Closed</option>
+      </select>
+      <div class="field-hint">Closing an entity hides it from the roster. Nothing is deleted.</div></div>`;
+  openModal('modal-estate');
+}
+
+async function saveEstate(){
+  const g = id => document.getElementById(id).value.trim();
+  const payload = {
+    name: g('e-name'),
+    case_number: g('e-case') || null,
+    plan_administrator: g('e-admin') || null,
+    bank_name: g('e-bank') || null,
+    bank_account_name: g('e-acctname') || null,
+    bank_routing: g('e-routing') || null,
+    bank_account_number: g('e-acct') || null,
+    active: g('e-active') === 'true'
+  };
+  if (!payload.name){ alert('The entity needs a name.'); return; }
+
+  const q = editingEstateId
+    ? sb.from('estates').update(payload).eq('id', editingEstateId)
+    : sb.from('estates').insert(payload);
+  const { error } = await q;
+  if (error){ alert('Could not save — ' + error.message); return; }
+  closeModal('modal-estate');
+
+  const keep = estate ? estate.id : null;
+  await loadEstates();                       // re-reads the list and its banking
+  if (keep){
+    estate = estates.find(x=>x.id===keep) || estates[0];
+    document.getElementById('estate-select').value = estate.id;
+  }
+  showEstates();
+}
+
+// ═══ VIEW 5 · CONTRACTORS ═════════════════════════════════════════════════
+function showContractors(){
+  setNav('nav-contractors'); setView('view-contractors');
+  document.getElementById('hdr-title').textContent='Contractors';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="openContractor()"><i class="ti ti-user-plus"></i> Add Contractor</button>`;
+  // Every estate, sorted estate-first — the estate a contractor is dedicated to
+  // is the first thing you need to know when you are reading across a portfolio.
+  const list = gContractors.slice().sort((a,b)=>
+    estateName(a.estate_id).localeCompare(estateName(b.estate_id)) || a.name.localeCompare(b.name));
+
+  document.getElementById('contractors-body').innerHTML = `
+    <div class="notice n-info"><i class="ti ti-lock"></i><div>Bank and tax details are masked here. They are written in full only into the payment export — treat that file as entity-confidential.</div></div>
+    <table class="client-table">
+      <thead><tr><th>Entity</th><th>Contractor</th><th>Email</th><th class="num">Rate</th><th>Term</th><th>Method</th><th>Account</th><th>W-9</th><th>Status</th><th style="width:120px"></th></tr></thead>
+      <tbody>${list.length?list.map(c=>`<tr>
+        <td style="font-weight:500">${esc(estateName(c.estate_id))}</td>
+        <td style="font-weight:500">${esc(c.name)}${c.business_name?`<div style="font-size:10px;color:var(--td);font-weight:400">${esc(c.business_name)}</div>`:''}${c.role_title?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">${esc(c.role_title)}</div>`:''}</td>
+        <td style="color:var(--gray)">${esc(c.email)}</td>
+        <td class="num">${money(c.rate)}</td>
+        <td style="color:var(--gray);white-space:nowrap">${c.contract_start?dt(c.contract_start):'—'} → ${c.contract_end?dt(c.contract_end):'ongoing'}</td>
+        <td>${esc(c.payment_method||'—')}</td>
+        <td class="mask">${mask(c.bank_account_number)}</td>
+        <td>${c.w9_on_file?'<span class="badge b-paid">Yes</span>':'<span class="badge b-rejected">Missing</span>'}</td>
+        <td>${c.active?'<span class="badge b-approved">Active</span>':'<span class="badge b-draft">Inactive</span>'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn-sm btn-gray btn-xs" onclick="openContractor('${c.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn-sm btn-gray btn-xs" onclick="sendReset('${esc(c.email)}')" title="Send a set-a-new-password link"><i class="ti ti-key"></i></button>
+          <button class="btn-sm btn-red btn-xs" onclick="deleteContractor('${c.id}')" title="Delete this contractor"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`).join(''):`<tr><td colspan="10"><div class="empty-note">No contractors yet. Add the first one.</div></td></tr>`}</tbody>
+    </table>`;
+}
+
+//  For duplicates and mistaken entries. The database refuses once any invoice
+//  exists — that history belongs to the entity, so deactivating is the right
+//  move for someone who simply stopped working.
+async function deleteContractor(id){
+  //  The name is looked up rather than passed through the markup — an
+  //  apostrophe in "O'Brien" would otherwise break out of the onclick string.
+  const c = gContractors.find(x=>x.id===id) || contractors.find(x=>x.id===id);
+  const name = c ? c.name : 'this contractor';
+  const o = onboarding.find(x=>x.contractor_id===id);
+  const warn = o && o.invited_at
+    ? '\n\nThey have already been invited. Their login will remain in Supabase Authentication and should be removed there too.'
+    : '';
+  if (!confirm(`Permanently delete ${name}?${warn}\n\nThis cannot be undone. If they have ever billed, the delete will be refused — deactivate them instead.`)) return;
+
+  const { error } = await sb.rpc('delete_contractor', { p_contractor: id });
+  if (error){ alert(error.message); return; }
+  await loadEstateData();
+  showContractors();
+}
+
+function openContractor(id){
+  editingContractorId = id || null;
+  const c = id ? (gContractors.find(x=>x.id===id) || contractors.find(x=>x.id===id) || {}) : {};
+  document.getElementById('mc-title').textContent = id ? 'Edit Contractor' : 'Add Contractor';
+  const v = (k, d='') => esc(c[k] ?? d);
+  const selEstate = c.estate_id || (estate ? estate.id : '');
+  document.getElementById('mc-body').innerHTML = `
+    <div class="fieldset-label">Engagement</div>
+    <div class="field-group"><div class="field-label">Entity *</div>
+      <select class="field-input" id="f-estate">${estates.map(e=>
+        `<option value="${e.id}" ${e.id===selEstate?'selected':''}>${esc(e.name)}</option>`).join('')}</select>
+      <div class="field-hint">Which entity this contractor is dedicated to.</div></div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Full Name *</div><input class="field-input" id="f-name" value="${v('name')}">
+        <div class="field-hint">The individual, as on their W-9.</div></div>
+      <div class="field-group"><div class="field-label">Role / Title</div><input class="field-input" id="f-role" value="${v('role_title')}" placeholder="e.g. Controller"></div>
+    </div>
+    <div class="field-group"><div class="field-label">Business Name <span style="text-transform:none;letter-spacing:0;font-weight:300">(if they bill through a company)</span></div>
+      <input class="field-input" id="f-business" value="${v('business_name')}" placeholder="e.g. Peloubet Advisory LLC">
+      <div class="field-hint">Leave blank if paid as an individual. When set, this is who the payment is made out to and who appears on the 1099 — it must match the name on the bank account.</div></div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Email *</div><input class="field-input" type="email" id="f-email" value="${v('email')}">
+        <div class="field-hint">Must match the Supabase login you create for them.</div></div>
+      <div class="field-group"><div class="field-label">Phone</div><input class="field-input" id="f-phone" value="${v('phone')}"></div>
+    </div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Pay Rate ($/hour) *</div><input class="field-input num" type="number" step="0.01" id="f-rate" value="${c.rate ?? ''}"></div>
+      <div class="field-group"><div class="field-label">Entity Type</div>
+        <select class="field-input" id="f-entity">${['','Individual','Sole Proprietor','LLC','S-Corp','C-Corp','Partnership']
+          .map(o=>`<option value="${o}" ${c.entity_type===o?'selected':''}>${o||'—'}</option>`).join('')}</select></div>
+    </div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Contract Start</div><input class="field-input" type="date" id="f-start" value="${v('contract_start')}"></div>
+      <div class="field-group"><div class="field-label">Contract End</div><input class="field-input" type="date" id="f-end" value="${v('contract_end')}">
+        <div class="field-hint">Leave blank if ongoing.</div></div>
+    </div>
+    <div class="field-group"><div class="field-label">Mailing Address</div><textarea class="field-input" id="f-address" style="min-height:52px">${v('address')}</textarea></div>
+
+    <div class="fieldset-label">Remittance</div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Payment Method</div>
+        <select class="field-input" id="f-method">${['ACH','Wire','Check']
+          .map(o=>`<option value="${o}" ${(c.payment_method||'ACH')===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field-group"><div class="field-label">Bank Name</div><input class="field-input" id="f-bank" value="${v('bank_name')}"></div>
+    </div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Account Holder Name</div><input class="field-input" id="f-acctname" value="${v('bank_account_name')}"></div>
+      <div class="field-group"><div class="field-label">Routing Number</div><input class="field-input" id="f-routing" value="${v('bank_routing')}"></div>
+    </div>
+    <div class="field-group"><div class="field-label">Account Number</div>
+      <input class="field-input" id="f-acct" value="${v('bank_account_number')}" autocomplete="off">
+      <div class="field-hint">Shown masked everywhere except the payment export.</div></div>
+
+    <div class="fieldset-label">1099 Compliance</div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Tax ID — Last 4 Only</div>
+        <input class="field-input" id="f-tin4" maxlength="4" value="${v('tax_id_last4')}" placeholder="1234">
+        <div class="field-hint">Store the signed W-9 itself in the Contract Repository, not here.</div></div>
+      <div class="field-group"><div class="field-label">Status</div>
+        <select class="field-input" id="f-active">
+          <option value="true"  ${c.active!==false?'selected':''}>Active</option>
+          <option value="false" ${c.active===false?'selected':''}>Inactive</option>
+        </select></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:14px">
+      <input type="checkbox" id="f-w9" ${c.w9_on_file?'checked':''}><span>Signed W-9 is on file</span></label>
+    <div class="field-group"><div class="field-label">Internal Notes</div><textarea class="field-input" id="f-notes" style="min-height:52px">${v('notes')}</textarea></div>`;
+  openModal('modal-contractor');
+}
+
+async function saveContractor(){
+  const g = id => document.getElementById(id).value.trim();
+  const payload = {
+    estate_id: g('f-estate') || (estate ? estate.id : null),
+    name: g('f-name'), business_name: g('f-business') || null,
+    email: g('f-email'), phone: g('f-phone') || null,
+    address: g('f-address') || null, role_title: g('f-role') || null,
+    rate: Number(g('f-rate')) || 0,
+    contract_start: g('f-start') || null, contract_end: g('f-end') || null,
+    payment_method: g('f-method'),
+    bank_name: g('f-bank') || null, bank_account_name: g('f-acctname') || null,
+    bank_account_number: g('f-acct') || null, bank_routing: g('f-routing') || null,
+    entity_type: g('f-entity') || null,
+    tax_id_last4: g('f-tin4') || null,
+    w9_on_file: document.getElementById('f-w9').checked,
+    active: g('f-active') === 'true',
+    notes: g('f-notes') || null
+  };
+  if (!payload.name || !payload.email){ alert('Name and email are both required.'); return; }
+  if (payload.tax_id_last4 && !/^[0-9]{4}$/.test(payload.tax_id_last4)){
+    alert('Tax ID must be exactly the last four digits, or left blank.'); return; }
+
+  const q = editingContractorId
+    ? sb.from('contractors').update(payload).eq('id', editingContractorId)
+    : sb.from('contractors').insert(payload);
+  const { data, error } = await q.select().single();
+  if (error){ alert('Could not save — ' + error.message); return; }
+  closeModal('modal-contractor');
+  await loadEstateData();
+
+  //  Adding a contractor only creates the record. Inviting them is a separate,
+  //  deliberate step — so offer it here rather than leaving someone wondering
+  //  why nothing was sent.
+  if (!editingContractorId && data && data.id){
+    if (confirm(`${payload.name} added.\n\nSend them a portal invitation now?\n\nThey'll get an email to set their own password and complete onboarding. You can also do this later from the Onboarding tab.`)){
+      await inviteContractor(data.id, true);
+      return;
+    }
+  }
+  showContractors();
+}
+
+// ═══ ADMINISTRATORS ═══════════════════════════════════════════════════════
+//  So a firm can add and remove its own administrators without opening the
+//  Supabase console. Everything here runs through the manage-access Edge
+//  Function — creating and deleting logins needs the service role key, which
+//  must never reach a browser.
+async function showAdmins(){
+  setNav('nav-admins'); setView('view-admins');
+  document.getElementById('hdr-title').textContent='Administrators';
+  document.getElementById('hdr-sub').textContent='Who can run this platform';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="grantAdmin()"><i class="ti ti-shield-plus"></i> Add Administrator</button>`;
+
+  const [a, ev] = await Promise.all([
+    sb.from('administrators').select('*'),
+    sb.from('admin_events').select('*').order('created_at',{ascending:false}).limit(25)
+  ]);
+  if (a.error){ document.getElementById('admins-body').innerHTML =
+    `<div class="notice n-bad"><i class="ti ti-alert-triangle"></i><div>Could not load administrators — ${esc(a.error.message)}<br><span style="font-size:11px">If this says the relation does not exist, re-run estate-1099-schema.sql in Supabase.</span></div></div>`; return; }
+
+  const list = (a.data||[]).slice().sort((x,y)=>x.email.localeCompare(y.email));
+  const evs  = ev.data || [];
+  const only = list.length === 1;
+
+  document.getElementById('admins-body').innerHTML = `
+    <div class="notice n-info"><i class="ti ti-info-circle"></i><div>
+      Administrators see every entity, every invoice and the payment export. Grant it sparingly.
+      One login carries one role — someone who also bills as a contractor needs a separate account
+      under a different email address.
+    </div></div>
+    ${only?`<div class="notice n-warn"><i class="ti ti-alert-triangle"></i><div>
+      <strong>You are the only administrator.</strong> If you lose access to this login, nobody can
+      restore it from inside the platform. Add a second administrator before you hand this over.
+    </div></div>`:''}
+    <table class="client-table">
+      <thead><tr><th>Email</th><th>Added</th><th>Status</th><th style="width:200px"></th></tr></thead>
+      <tbody>${list.map(p=>`<tr>
+        <td style="font-weight:500">${esc(p.email)}${p.is_you?' <span class="badge b-approved">You</span>':''}</td>
+        <td style="color:var(--gray)">${p.created_at?dt(p.created_at):'—'}</td>
+        <td><span class="badge b-approved">Administrator</span></td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn-sm btn-gray btn-xs" onclick="sendReset('${p.id}','admin')"><i class="ti ti-key"></i> Reset password</button>
+          ${p.is_you
+            ? `<button class="btn-sm btn-gray btn-xs" disabled title="You cannot remove your own access"><i class="ti ti-trash"></i></button>`
+            : `<button class="btn-sm btn-red btn-xs" onclick="revokeAdmin('${p.id}')" title="Remove administrator access"><i class="ti ti-trash"></i></button>`}
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+
+    <div class="fieldset-label" style="margin-top:22px">Access history</div>
+    ${evs.length?`<table class="client-table">
+      <thead><tr><th>When</th><th>Action</th><th>Who it affected</th><th>Done by</th></tr></thead>
+      <tbody>${evs.map(e=>`<tr>
+        <td style="color:var(--gray);white-space:nowrap">${dt(e.created_at)}</td>
+        <td>${e.action==='granted'?'<span class="badge b-approved">Granted</span>'
+             :e.action==='revoked'?'<span class="badge b-rejected">Revoked</span>'
+             :'<span class="badge b-draft">Reset sent</span>'}
+            ${e.note?`<div style="font-size:10px;color:var(--gray)">${esc(e.note)}</div>`:''}</td>
+        <td>${esc(e.subject_email)}</td>
+        <td style="color:var(--gray)">${esc(e.actor_email)}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:`<div class="empty-note">Nothing yet. Grants, removals and password resets are recorded here permanently.</div>`}`;
+}
+
+//  Shared plumbing. Every access change is one Edge Function call, and the
+//  function's own message is what gets shown — it knows more about what
+//  happened than the browser does.
+async function callAccess(payload){
+  const { data, error } = await sb.functions.invoke('manage-access', { body: payload });
+  if (error || data?.error){
+    alert((data?.error || error.message)
+      + '\n\nIf this says the function was not found, deploy manage-access in Supabase → Edge Functions.');
+    return null;
+  }
+  alert(data.message);
+  return data;
+}
+
+async function grantAdmin(){
+  const email = (prompt('Email address of the person to make an administrator:\n\nIf they already have a login, it is promoted. Otherwise they are emailed an invitation to set their own password.')||'').trim();
+  if (!email) return;
+  if (!email.includes('@')){ alert('That does not look like an email address.'); return; }
+  if (!confirm(`Make ${email} an administrator?\n\nThey will see every entity, every invoice and the payment export, including bank details.`)) return;
+  if (await callAccess({ action:'grant_admin', email })) showAdmins();
+}
+
+async function revokeAdmin(profileId){
+  const { data } = await sb.from('administrators').select('email').eq('id', profileId).single();
+  const who = data ? data.email : 'this administrator';
+  if (!confirm(`Remove administrator access for ${who}?\n\nTheir login is deleted — they will not be able to sign in at all. This cannot be undone, though you can invite them again.`)) return;
+  if (await callAccess({ action:'revoke_admin', profile_id: profileId })) showAdmins();
+}
+
+//  portal decides where the link lands after they choose a new password.
+//  Sending an administrator to the contractor portal, or the reverse, is a
+//  confusing dead end.
+async function sendReset(idOrEmail, portal){
+  let email = idOrEmail;
+  if (portal === 'admin'){
+    const { data } = await sb.from('administrators').select('email').eq('id', idOrEmail).single();
+    if (!data){ alert('Could not find that administrator.'); return; }
+    email = data.email;
+  }
+  if (!confirm(`Send a set-a-new-password link to ${email}?\n\nTheir current password keeps working until they use it.`)) return;
+  await callAccess({ action:'send_reset', email, portal: portal==='admin'?'admin':'contractor' });
+}
+
+// ═══ VIEW 6 · CONTRACT REPOSITORY ═════════════════════════════════════════
+async function showContracts(){
+  setNav('nav-contracts'); setView('view-contracts');
+  document.getElementById('hdr-title').textContent='Contract Repository';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="openContract()"><i class="ti ti-upload"></i> File a Document</button>`;
+
+  const { data, error } = await sb.from('contracts').select('*')
+    .eq('estate_id', estate.id).order('created_at',{ascending:false});
+  if (error){ document.getElementById('contracts-body').innerHTML =
+    `<div class="notice n-bad"><i class="ti ti-alert-triangle"></i><div>Could not load the repository — ${esc(error.message)}</div></div>`; return; }
+  contracts = data || [];
+
+  const byContractor = id => contractors.find(c=>c.id===id);
+  const today = new Date().toISOString().slice(0,10);
+  const expiring = contracts.filter(d=>d.expiration_date && d.expiration_date < today);
+  const missingW9 = contractors.filter(c=>c.active && !c.w9_on_file);
+
+  document.getElementById('contracts-body').innerHTML = `
+    ${missingW9.length?`<div class="notice n-warn"><i class="ti ti-file-alert"></i><div><b>${missingW9.length} active contractor${missingW9.length===1?'':'s'} without a W-9 on file:</b> ${missingW9.map(c=>esc(c.name)).join(', ')}</div></div>`:''}
+    ${expiring.length?`<div class="notice n-bad"><i class="ti ti-calendar-x"></i><div><b>${expiring.length} document${expiring.length===1?'':'s'} past expiration:</b> ${expiring.map(d=>esc(d.title)).join(', ')}</div></div>`:''}
+    <table class="client-table">
+      <thead><tr><th>Document</th><th>Type</th><th>Contractor</th><th>Effective</th><th>Expires</th><th>Filed</th><th style="width:110px"></th></tr></thead>
+      <tbody>${contracts.length?contracts.map(d=>`<tr>
+        <td style="font-weight:500">${esc(d.title)}${d.notes?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">${esc(d.notes)}</div>`:''}</td>
+        <td><span class="badge b-approved">${esc(d.doc_type)}</span></td>
+        <td>${d.contractor_id ? esc((byContractor(d.contractor_id)||{}).name || '—') : '<span style="color:var(--sky-txt)">Entity-level</span>'}</td>
+        <td style="color:var(--gray)">${dt(d.effective_date)}</td>
+        <td style="color:${d.expiration_date && d.expiration_date < today ? 'var(--red)' : 'var(--gray)'}">${dt(d.expiration_date)}</td>
+        <td style="color:var(--gray)">${dt(d.created_at)}</td>
+        <td style="text-align:right;white-space:nowrap">
+          ${d.file_path?`<button class="btn-sm btn-gray btn-xs" onclick="downloadContract('${d.id}')"><i class="ti ti-download"></i></button>`:''}
+          <button class="btn-sm btn-gray btn-xs" onclick="deleteContract('${d.id}')"><i class="ti ti-trash"></i></button>
+        </td></tr>`).join('')
+        :`<tr><td colspan="7"><div class="empty-note">No documents filed yet. Upload the executed agreements, W-9s and engagement letters here so they sit alongside the billing record.</div></td></tr>`}
+      </tbody>
+    </table>`;
+}
+
+//  prefill lets the Onboarding tab open this already pointed at one contractor
+//  with the type set to Agreement — issuing an agreement is the common case and
+//  should not require remembering which two dropdowns to change.
+function openContract(prefill){
+  const p = prefill || {};
+  const types = ['Agreement','Executed Agreement','Amendment','W-9','Insurance','Engagement Letter','Court Order','Other'];
+  document.getElementById('mdoc-body').innerHTML = `
+    ${p.contractor_id?`<div class="notice n-info" style="margin-top:0"><i class="ti ti-send"></i><div>
+      Filing an agreement against a contractor issues it to them. It appears in their
+      onboarding straight away, to download, sign and upload back.</div></div>`:''}
+    <div class="field-group"><div class="field-label">Title *</div>
+      <input class="field-input" id="d-title" value="${esc(p.title||'')}" placeholder="e.g. Independent Contractor Agreement — A. Jonson"></div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Document Type</div>
+        <select class="field-input" id="d-type">${types
+          .map(o=>`<option ${o===(p.doc_type||'Agreement')?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field-group"><div class="field-label">Contractor</div>
+        <select class="field-input" id="d-contractor">
+          <option value="">Entity-level (no contractor)</option>
+          ${contractors.map(c=>`<option value="${c.id}" ${c.id===p.contractor_id?'selected':''}>${esc(c.name)}</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Effective Date</div><input class="field-input" type="date" id="d-eff"></div>
+      <div class="field-group"><div class="field-label">Expiration Date</div><input class="field-input" type="date" id="d-exp"></div>
+    </div>
+    <div class="field-group"><div class="field-label">File *</div>
+      <input class="field-input" type="file" id="d-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+      <div class="field-hint">Stored in a private bucket. Contractors can download only what is filed against their own record.</div></div>
+    <div class="field-group"><div class="field-label">Notes</div><textarea class="field-input" id="d-notes" style="min-height:52px"></textarea></div>
+    <div id="d-progress" style="font-size:11px;color:var(--sky-txt)"></div>`;
+  openModal('modal-contract');
+}
+
+async function saveContract(){
+  const title = document.getElementById('d-title').value.trim();
+  const file  = document.getElementById('d-file').files[0];
+  if (!title){ alert('Give the document a title.'); return; }
+  if (!file){ alert('Choose a file to upload.'); return; }
+
+  const btn = document.getElementById('mdoc-save');
+  btn.disabled = true;
+  document.getElementById('d-progress').textContent = 'Uploading…';
+
+  const contractorId = document.getElementById('d-contractor').value || null;
+  const safe = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = `${estate.id}/${contractorId || 'estate'}/${Date.now()}-${safe}`;
+
+  const { error: upErr } = await sb.storage.from('contracts').upload(path, file, { upsert:false });
+  if (upErr){ btn.disabled=false; document.getElementById('d-progress').textContent='';
+    const rls = /row-level security|violates|not authorized|403/i.test(upErr.message);
+    alert('Upload failed — ' + upErr.message
+      + (rls ? '\n\nThis almost always means this browser is no longer signed in as an administrator — '
+             + 'signing into the contractor portal on the same domain replaces the session. '
+             + 'Hard-refresh this page (Ctrl+Shift+R), sign in as an administrator, and use a private window for the contractor portal.'
+             : ''));
+    return; }
+
+  const { error } = await sb.from('contracts').insert({
+    estate_id: estate.id, contractor_id: contractorId,
+    doc_type: document.getElementById('d-type').value,
+    title,
+    effective_date: document.getElementById('d-eff').value || null,
+    expiration_date: document.getElementById('d-exp').value || null,
+    file_path: path, file_name: file.name, file_size: file.size, mime_type: file.type,
+    notes: document.getElementById('d-notes').value.trim() || null,
+    uploaded_by: me.id
+  });
+  btn.disabled = false;
+  if (error){ alert('File uploaded but the record failed to save — ' + error.message); return; }
+  closeModal('modal-contract');
+
+  //  Return to wherever this was opened from. Someone issuing an agreement from
+  //  the onboarding board wants to stay on the board and see the step advance,
+  //  not be dropped into the repository.
+  if (document.querySelector('.view.active').id === 'view-onboarding'){
+    if (contractorId) alert('Filed and issued. It is now in their onboarding to download, sign and upload back.');
+    await showOnboarding();
+    return;
+  }
+  showContracts();
+}
+
+async function downloadContract(id){
+  const d = contracts.find(x=>x.id===id);
+  const { data, error } = await sb.storage.from('contracts').createSignedUrl(d.file_path, 60);
+  if (error){ alert('Could not open that document — ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+async function deleteContract(id){
+  const d = contracts.find(x=>x.id===id);
+  if (!confirm(`Permanently delete this document from the entity repository?\n\n${d.title}\n\nThis cannot be undone.`)) return;
+  if (d.file_path) await sb.storage.from('contracts').remove([d.file_path]);
+  const { error } = await sb.from('contracts').delete().eq('id', id);
+  if (error){ alert('Could not delete — ' + error.message); return; }
+  showContracts();
+}
+
+// ═══ VIEW 7 · PAY PERIODS ═════════════════════════════════════════════════
+function showPeriods(){
+  setNav('nav-periods'); setView('view-periods');
+  document.getElementById('hdr-title').textContent='Billing Periods';
+  document.getElementById('hdr-actions').innerHTML =
+    `<button class="btn-sm btn-teal" onclick="openPeriodModal()"><i class="ti ti-calendar-plus"></i> Add Billing Period</button>`;
+  document.getElementById('periods-body').innerHTML = `
+    <div class="notice n-info"><i class="ti ti-info-circle"></i><div>Closing a period stops contractors from opening a new invoice against it. Invoices already in flight are unaffected. The due date drives the reminder and overdue emails — leave it blank to send neither.</div></div>
+    <table class="client-table">
+      <thead><tr><th>Label</th><th>Start</th><th>End</th><th>Due</th><th class="num">Invoices</th><th class="num">Hours</th><th class="num">Total</th><th>Status</th><th style="width:100px"></th></tr></thead>
+      <tbody>${periods.map(p=>{
+        const inv = allInvoices.filter(i=>i.pay_period_id===p.id);
+        const late = p.due_date && p.status==='open' && p.due_date < new Date().toISOString().slice(0,10);
+        return `<tr>
+          <td style="font-weight:500">${esc(p.label)}</td><td style="color:var(--gray)">${dt(p.period_start)}</td>
+          <td style="color:var(--gray)">${dt(p.period_end)}</td>
+          <td><input type="date" class="status-select" style="padding:3px 5px;font-size:11px${late?';border-color:var(--red);color:var(--red)':''}"
+                     value="${p.due_date||''}" onchange="setPeriodDue('${p.id}',this.value)"></td>
+          <td class="num">${inv.length}</td>
+          <td class="num">${hrs(inv.reduce((s,i)=>s+Number(i.total_hours),0))}</td>
+          <td class="num" style="font-weight:500">${money(inv.reduce((s,i)=>s+Number(i.total_due),0))}</td>
+          <td>${p.status==='open'?'<span class="badge b-approved">Open</span>':'<span class="badge b-draft">Closed</span>'}</td>
+          <td style="text-align:right"><button class="btn-sm btn-gray btn-xs" onclick="togglePeriod('${p.id}')">${p.status==='open'?'Close':'Reopen'}</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+function openPeriodModal(){
+  document.getElementById('mp-body').innerHTML = `
+    <div class="field-grid">
+      <div class="field-group"><div class="field-label">Period Start</div><input class="field-input" type="date" id="p-start" onchange="autoLabel()"></div>
+      <div class="field-group"><div class="field-label">Period End</div><input class="field-input" type="date" id="p-end" onchange="autoLabel()"></div>
+    </div>
+    <div class="field-group"><div class="field-label">Label</div><input class="field-input" id="p-label" placeholder="Jun 1 – Jun 30, 2026">
+      <div class="field-hint">This is what contractors pick from in their portal.</div></div>
+    <div class="field-group"><div class="field-label">Submission Due Date</div><input class="field-input" type="date" id="p-due">
+      <div class="field-hint">Reminders go out 3 days before; overdue notices weekly after. Blank means no email.</div></div>`;
+  openModal('modal-period');
+}
+function autoLabel(){
+  const s = document.getElementById('p-start').value, e = document.getElementById('p-end').value;
+  if (!s || !e) return;
+  const sd = new Date(s+'T00:00'), ed = new Date(e+'T00:00');
+  document.getElementById('p-label').value =
+    `${MON[sd.getMonth()+1]} ${sd.getDate()} – ${MON[ed.getMonth()+1]} ${ed.getDate()}, ${ed.getFullYear()}`;
+}
+async function savePeriod(){
+  const s = document.getElementById('p-start').value, e = document.getElementById('p-end').value;
+  const label = document.getElementById('p-label').value.trim();
+  if (!s || !e || !label){ alert('Start, end and label are all required.'); return; }
+  const sd = new Date(s+'T00:00');
+  const { error } = await sb.from('pay_periods').insert({
+    estate_id: estate.id, label, period_start: s, period_end: e,
+    pay_month: sd.getMonth()+1, pay_year: sd.getFullYear(),
+    due_date: document.getElementById('p-due').value || null
+  });
+  if (error){ alert('Could not add the period — ' + error.message); return; }
+  closeModal('modal-period');
+  await loadEstateData(); showPeriods();
+}
+async function setPeriodDue(id, value){
+  const { error } = await sb.from('pay_periods').update({ due_date: value || null }).eq('id', id);
+  if (error){ alert('Could not set the due date — ' + error.message); return; }
+  await loadEstateData(); showPeriods();
+}
+async function togglePeriod(id){
+  const p = periods.find(x=>x.id===id);
+  const { error } = await sb.from('pay_periods')
+    .update({ status: p.status==='open'?'closed':'open' }).eq('id', id);
+  if (error){ alert('Could not change the period — ' + error.message); return; }
+  await loadEstateData(); showPeriods();
+}
+
+// ═══ VIEW · ESTATE 1099 CONTRACTORS (every estate) + PAYMENT EXPORT ═══════
+//  Deliberately portfolio-wide: one roster, one export, regardless of which
+//  estate a contractor is dedicated to.
+function showRoster(jumpToExport){
+  //  These used to be the same screen with a scroll, which made the two nav
+  //  items look identical. The export is a different job with a different
+  //  audience — accounting, not oversight — so it gets its own page.
+  if (jumpToExport) return showExport();
+  setNav('nav-roster');
+  setView('view-roster');
+  document.getElementById('hdr-title').textContent = 'All 1099 Contractors';
+  document.getElementById('hdr-sub').textContent = 'Every contractor, every entity';
+  document.getElementById('hdr-actions').innerHTML = '';
+  renderRoster();
+}
+
+async function showExport(){
+  setNav('nav-export');
+  setView('view-export');
+  document.getElementById('hdr-title').textContent = 'Payment Export';
+  document.getElementById('hdr-sub').textContent = 'One file for accounting, across every entity';
+  document.getElementById('hdr-actions').innerHTML = '';
+  await Promise.all([loadExportLog(), loadPayees()]);
+  renderExportPage();
+}
+
+function renderExportPage(){
+  const m = rosterMonth();
+  const el = document.getElementById('export-body');
+  if (!m){ el.innerHTML = `<div class="empty-note">No billing periods exist yet. Add one under Billing Periods.</div>`; return; }
+
+  el.innerHTML = `
+    ${bankAlertBanner()}
+    <div class="notice n-info"><i class="ti ti-lock"></i><div>
+      This is the only place full bank details leave the system. Treat the downloaded file as
+      entity-confidential: send it the way your firm sends payment instructions, not as an
+      ordinary email attachment.</div></div>
+    <div class="section-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">Billing Month</div>
+        <select class="status-select" onchange="rosterKey=this.value;renderExportPage()">
+          ${monthOptions().map(o=>`<option value="${o.key}" ${o.key===m.key?'selected':''}>${MON[o.month]} ${o.year}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-sm btn-gray" onclick="showRoster()"><i class="ti ti-arrow-left"></i> All Contractors</button>
+    </div>
+    <div id="export-block">${renderExportBlock()}</div>
+
+    <details style="margin-top:18px;border:1px solid var(--border);border-radius:2px;background:var(--gl)">
+      <summary style="cursor:pointer;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray)">
+        What's in the file — 19 columns</summary>
+      <div style="padding:0 14px 14px">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:10px">
+          The preview above shows the columns you need to check by eye. The downloaded file
+          carries all of these, in this order.
+        </div>
+        <table class="client-table">
+          <thead><tr><th style="width:34px">#</th><th>Column</th><th>What it holds</th></tr></thead>
+          <tbody>${[
+            ['Entity Name','The estate or entity making the payment'],
+            ['Entity Bank','Bank the entity pays from'],
+            ['Entity Account','Masked unless you choose Download for Accounting'],
+            ['Entity Routing','Masked unless full'],
+            ['Pay To','<b>Who the payment is made out to</b> — the business name when there is one, otherwise the individual. Must match the name on the account'],
+            ['Contractor Name','The individual, always — for the entity\'s own records'],
+            ['Business Name','Blank when the contractor is paid personally'],
+            ['Payment Method','ACH, Wire or Check'],
+            ['Contractor Bank','Receiving bank'],
+            ['Contractor Account Name','Name as the bank holds it'],
+            ['Contractor Account','Masked unless full'],
+            ['Contractor Routing','Masked unless full'],
+            ['Billing Month','e.g. Sep'],
+            ['Billing Year','e.g. 2026'],
+            ['Billing Period','e.g. Sep 1 – Sep 30, 2026'],
+            ['Total Hours','Billed hours for the month'],
+            ['Rate','Hourly rate as it stood when the invoice was filed'],
+            ['Amount','<b>What to disburse</b>'],
+            ['Status','Filed or paid']
+          ].map((r,i)=>`<tr>
+            <td style="color:var(--sky-txt)">${i+1}</td>
+            <td style="font-weight:500;white-space:nowrap">${r[0]}</td>
+            <td style="color:var(--gray)">${r[1]}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </details>
+
+    <div class="fieldset-label" style="margin-top:26px">Payee setup file</div>
+    <div style="font-size:11px;color:var(--gray);margin:-4px 0 10px">
+      What accounting uses to create or update the payee record — separate from the monthly
+      payment run. A contractor is listed as <b>new</b> until they have been sent, and returns
+      as <b>changed</b> whenever their banking moves, so nobody has to remember who was set up when.
+    </div>
+    <div id="payee-body"></div>
+
+    <div class="fieldset-label" style="margin-top:26px">Export history</div>
+    <div style="font-size:11px;color:var(--gray);margin:-4px 0 10px">
+      Every payment file that has left this system. Full bank details leave only through
+      this page, so each run is recorded permanently — including who ran it.
+    </div>
+    ${exportLogTable()}`;
+  renderExportPreview();
+  renderPayees();
+}
+
+function rosterRows(){
+  const m = rosterMonth();
+  if (!m) return [];
+  return estates.map(e => ({
+    e,
+    rows: gContractors.filter(c => c.estate_id === e.id && c.active).map(c => {
+      const mo  = gInvoices.find(i => i.contractor_id===c.id && i.pay_year===m.year && i.pay_month===m.month);
+      const ytd = gInvoices.filter(i => i.contractor_id===c.id && i.pay_year===m.year && i.pay_month<=m.month);
+      return { c, mo,
+        moHours:  mo ? Number(mo.total_hours) : 0,
+        moDue:    mo ? Number(mo.total_due)   : 0,
+        ytdHours: ytd.reduce((s,i)=>s+Number(i.total_hours),0),
+        ytdDue:   ytd.reduce((s,i)=>s+Number(i.total_due),0) };
+    })
+  })).filter(g => g.rows.length);
+}
+
+function renderRoster(){
+  const m = rosterMonth();
+  const el = document.getElementById('roster-body');
+  if (!m){ el.innerHTML = `<div class="empty-note">No billing periods exist yet. Add one under Billing Periods.</div>`; return; }
+
+  const groups = rosterRows();
+  const all    = groups.flatMap(g=>g.rows);
+  const totMoH = all.reduce((s,r)=>s+r.moHours,0);
+  const totMo  = all.reduce((s,r)=>s+r.moDue,0);
+  const totYtd = all.reduce((s,r)=>s+r.ytdDue,0);
+  const billing= all.filter(r=>r.moDue>0).length;
+
+  el.innerHTML = `
+    ${bankAlertBanner()}
+    ${overdueBanner(m)}
+    <div class="section-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">Billing Month</div>
+        <select class="status-select" onchange="rosterKey=this.value;renderRoster()">
+          ${monthOptions().map(o=>`<option value="${o.key}" ${o.key===m.key?'selected':''}>${MON[o.month]} ${o.year}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-sm btn-teal" onclick="showRoster(true)"><i class="ti ti-file-spreadsheet"></i> Go to Payment Export</button>
+    </div>
+
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">Entities</div><div class="sum-val">${groups.length}</div><div class="sum-sub">${all.length} active contractor${all.length===1?'':'s'}</div></div>
+      <div class="sum-box"><div class="sum-label">Hours — ${MON[m.month]} ${m.year}</div><div class="sum-val">${hrs(totMoH)}</div><div class="sum-sub">${billing} contractor${billing===1?'':'s'} billing</div></div>
+      <div class="sum-box accent"><div class="sum-label">Total — ${MON[m.month]} ${m.year}</div><div class="sum-val">${money(totMo)}</div><div class="sum-sub">across all entities</div></div>
+      <div class="sum-box"><div class="sum-label">Year to Date</div><div class="sum-val">${money(totYtd)}</div><div class="sum-sub">Jan–${MON[m.month]} ${m.year}</div></div>
+    </div>
+
+    ${groups.map(g=>{
+      const gMoH = g.rows.reduce((s,r)=>s+r.moHours,0);
+      const gMo  = g.rows.reduce((s,r)=>s+r.moDue,0);
+      const gYtdH= g.rows.reduce((s,r)=>s+r.ytdHours,0);
+      const gYtd = g.rows.reduce((s,r)=>s+r.ytdDue,0);
+      return `<div class="card" style="margin-bottom:14px">
+        <div class="card-hdr">
+          <div class="card-title">${esc(g.e.name)}${g.e.case_number?` · Case ${esc(g.e.case_number)}`:''}</div>
+          <div style="font-size:11px;color:var(--gray)">${MON[m.month]} ${m.year}: <b>${money(gMo)}</b> &nbsp;·&nbsp; YTD: <b>${money(gYtd)}</b></div>
+        </div>
+        <table class="client-table" style="border:none">
+          <thead><tr>
+            <th>Contractor</th><th class="num">Rate</th>
+            <th class="num">${MON[m.month]} Hours</th><th class="num">${MON[m.month]} Total</th>
+            <th class="num">YTD Hours</th><th class="num">YTD Total</th><th>Status</th><th style="width:26px"></th>
+          </tr></thead>
+          <tbody>${g.rows.map(r=>`
+            <tr class="clickable" onclick="drillFromRoster('${r.c.estate_id}','${r.c.id}')">
+              <td style="font-weight:500">${esc(r.c.name)}${r.c.role_title?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">${esc(r.c.role_title)}</div>`:''}</td>
+              <td class="num">${money(r.c.rate)}</td>
+              <td class="num">${r.moHours?hrs(r.moHours):'—'}</td>
+              <td class="num" style="font-weight:600">${r.moDue?money(r.moDue):'—'}</td>
+              <td class="num">${hrs(r.ytdHours)}</td>
+              <td class="num" style="font-weight:500">${money(r.ytdDue)}</td>
+              <td>${statusBadge(r.mo?r.mo.status:'none')}</td>
+              <td style="color:var(--sky-txt)"><i class="ti ti-chevron-right"></i></td>
+            </tr>`).join('')}
+          </tbody>
+          <tfoot><tr class="totals-row">
+            <td>${esc(g.e.name)} total</td><td></td>
+            <td class="num">${hrs(gMoH)}</td><td class="num">${money(gMo)}</td>
+            <td class="num">${hrs(gYtdH)}</td><td class="num">${money(gYtd)}</td><td colspan="2"></td>
+          </tr></tfoot>
+        </table></div>`;
+    }).join('')}
+
+    ${groups.length>1?`<table class="client-table" style="margin-bottom:20px">
+      <tfoot><tr class="totals-row">
+        <td style="font-weight:600">All entities — ${MON[m.month]} ${m.year}</td>
+        <td class="num">${hrs(totMoH)} hrs</td><td class="num" style="font-size:13px">${money(totMo)}</td>
+        <td class="num">YTD ${money(totYtd)}</td></tr></tfoot></table>`:''}
+
+    `;
+}
+
+function drillFromRoster(estateId, contractorId){
+  if (!estate || estate.id !== estateId){
+    estate = estates.find(e=>e.id===estateId);
+    document.getElementById('estate-select').value = estateId;
+    loadEstateData().then(()=>showDetail(contractorId));
+  } else showDetail(contractorId);
+}
+
+// ── remittance-change control ─────────────────────────────────────────────
+//  Changing a contractor's account number is the classic payment-fraud move.
+//  Any such change is logged by the database and blocks nothing — but it is
+//  surfaced here until an administrator confirms it out of band.
+const FIELD_LABELS = {
+  bank_account_number:'account number', bank_routing:'routing number',
+  bank_name:'bank', bank_account_name:'account holder',
+  payment_method:'payment method', rate:'pay rate'
+};
+function bankAlertBanner(){
+  if (!bankAlerts.length) return '';
+  return `<div class="notice n-bad" style="align-items:flex-start">
+    <i class="ti ti-alert-hexagon"></i>
+    <div style="flex:1">
+      <b>${bankAlerts.length} unconfirmed remittance change${bankAlerts.length===1?'':'s'}.</b>
+      Verify with the contractor by phone — not by replying to email — before the next payment run.
+      ${bankAlerts.map(a=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-top:7px;padding-top:7px;border-top:1px solid #f0cbc8">
+          <div style="flex:1;color:var(--blk)">
+            <b>${esc(a.contractor_name)}</b> — ${esc(FIELD_LABELS[a.field]||a.field)} changed
+            from <span class="mask">${esc(a.old_value||'—')}</span> to <span class="mask">${esc(a.new_value||'—')}</span>
+            <div style="font-size:10px;color:var(--gray)">${dt(a.created_at)} by ${esc(a.actor_email||'unknown')}</div>
+          </div>
+          <button class="btn-sm btn-gray btn-xs" onclick="acknowledgeChange(${a.id})">Confirm</button>
+        </div>`).join('')}
+    </div></div>`;
+}
+async function acknowledgeChange(id){
+  const a = bankAlerts.find(x=>x.id===id);
+  if (!confirm(`Confirm this change to ${a.contractor_name}'s ${FIELD_LABELS[a.field]||a.field}?\n\nOnly do this once you have verified it with them directly — by phone or in person, not by replying to the message that requested it.`)) return;
+  const { error } = await sb.rpc('acknowledge_change', { change_id: id });
+  if (error){ alert('Could not confirm — ' + error.message); return; }
+  await loadEstateData(); refreshCurrentView();
+}
+
+// ── who has not filed yet ─────────────────────────────────────────────────
+function overdueBanner(m){
+  const today = new Date().toISOString().slice(0,10);
+  const late = [];
+  gPeriods.filter(p=>p.pay_year===m.year && p.pay_month===m.month && p.due_date).forEach(p=>{
+    gContractors.filter(c=>c.estate_id===p.estate_id && c.active).forEach(c=>{
+      const inv = gInvoices.find(i=>i.contractor_id===c.id && i.pay_period_id===p.id);
+      if (!inv || inv.status==='draft' || inv.status==='rejected')
+        late.push({ name:c.name, estate:estateName(p.estate_id), due:p.due_date,
+                    state: inv && inv.status==='rejected' ? 'returned, not resubmitted' : 'not submitted',
+                    overdue: p.due_date < today });
+    });
+  });
+  if (!late.length) return '';
+  const past = late.filter(l=>l.overdue);
+  return `<div class="notice ${past.length?'n-warn':'n-info'}">
+    <i class="ti ti-clock-exclamation"></i>
+    <div><b>${late.length} invoice${late.length===1?'':'s'} outstanding${past.length?` · ${past.length} past due`:''}.</b>
+    <div style="margin-top:4px;color:var(--blk)">${late.map(l=>
+      `${esc(l.name)} <span style="color:var(--gray);font-size:11px">(${l.state}, due ${dt(l.due)})</span>`).join(' · ')}</div>
+    </div></div>`;
+}
+
+// ── the export section, rendered inside the roster page ───────────────────
+function renderExportBlock(){
+  const m = rosterMonth();
+  return `
+    <div class="section-hdr" style="margin-top:8px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">${MON[m.month]} ${m.year} — what will be in the file</div>
+        <select class="status-select" id="exp-filter" onchange="renderExportPreview()">
+          <option value="approved">Filed &amp; unpaid only</option>
+          <option value="unpaid">Everything not yet paid</option>
+          <option value="all">Every invoice with time</option>
+          <option value="paid">Paid only</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn-sm btn-gray" onclick="downloadMasterWorkbook()"><i class="ti ti-file-spreadsheet"></i> Master Workbook</button>
+        <button class="btn-sm btn-out" onclick="downloadExport(false)"><i class="ti ti-eye-off"></i> Download Masked</button>
+        <button class="btn-sm btn-teal" onclick="downloadExport(true)"><i class="ti ti-download"></i> Download for Accounting</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin:-6px 0 12px">
+      Both downloads are Excel workbooks — a <b>Payment Schedule</b> sheet grouped by entity,
+      listing every contractor and amount with the entity total to reconcile against that
+      account's debit, and a <b>Payments</b> sheet with the full detail.
+      Need a flat file to import into another system?
+      <a href="#" onclick="downloadExport(false,true);return false;" style="color:var(--td)">masked CSV</a> ·
+      <a href="#" onclick="downloadExport(true,true);return false;" style="color:var(--td)">full CSV</a>
+    </div>
+    ${bankAlerts.length?`<div class="notice n-bad"><i class="ti ti-alert-hexagon"></i><div>
+      <b>Do not run this payment file yet.</b> ${bankAlerts.length} remittance change${bankAlerts.length===1?' is':'s are'} still unconfirmed — see the alert at the top of this page.</div></div>`:''}
+    <div class="notice n-warn"><i class="ti ti-shield-lock"></i><div>
+      <b>The accounting file contains full bank account and routing numbers.</b> One file covers every entity for this month. Send it the way the entity sends any remittance instruction — not by ordinary email.</div></div>
+    <div id="export-preview"></div>`;
+}
+
+function exportRows(){
+  const m = rosterMonth();
+  if (!m) return [];
+  const filterEl = document.getElementById('exp-filter');
+  const filter = filterEl ? filterEl.value : 'approved';
+  let rows = gInvoices.filter(i => i.pay_year===m.year && i.pay_month===m.month && Number(i.entry_count)>0);
+  if (filter==='approved') rows = rows.filter(i=>i.status==='approved');
+  if (filter==='paid')     rows = rows.filter(i=>i.status==='paid');
+  if (filter==='unpaid')   rows = rows.filter(i=>i.status!=='paid');
+  return rows.map(i=>{
+    const c = gContractors.find(x=>x.id===i.contractor_id) || {};
+    const e = estates.find(x=>x.id===i.estate_id) || {};
+    const p = gPeriods.find(x=>x.id===i.pay_period_id) || {};
+    return {
+      estate_name: e.name || i.estate_name || '',
+      estate_bank: e.bank_name || '',
+      estate_account: e.bank_account_number || '',
+      estate_routing: e.bank_routing || '',
+      contractor_name: c.name || i.contractor_name,
+      business_name: c.business_name || '',
+      //  Who the cheque or transfer is made out to. It has to match the name on
+      //  the account or the payment is returned.
+      payee_name: (c.business_name || '').trim() || c.name || i.contractor_name,
+      payment_method: c.payment_method || '',
+      contractor_bank: c.bank_name || '',
+      contractor_account_name: c.bank_account_name || '',
+      contractor_account: c.bank_account_number || '',
+      contractor_routing: c.bank_routing || '',
+      pay_month: MON[i.pay_month] || '',
+      pay_year: i.pay_year || '',
+      pay_period: p.label || i.period_label || '',
+      total_hours: Number(i.total_hours).toFixed(2),
+      rate: Number(i.rate_snapshot).toFixed(2),
+      amount: Number(i.total_due).toFixed(2),
+      status: i.status
+    };
+  }).sort((a,b)=> a.estate_name.localeCompare(b.estate_name) || a.contractor_name.localeCompare(b.contractor_name));
+}
+
+function renderExportPreview(){
+  const el = document.getElementById('export-preview');
+  if (!el) return;
+  const rows = exportRows();
+  const total = rows.reduce((s,r)=>s+Number(r.amount),0);
+  el.innerHTML = rows.length ? `
+    <div class="sum-strip" style="grid-template-columns:repeat(3,1fr)">
+      <div class="sum-box"><div class="sum-label">Payments</div><div class="sum-val">${rows.length}</div><div class="sum-sub">line${rows.length===1?'':'s'} in this run</div></div>
+      <div class="sum-box"><div class="sum-label">Total Hours</div><div class="sum-val">${hrs(rows.reduce((s,r)=>s+Number(r.total_hours),0))}</div><div class="sum-sub">billed</div></div>
+      <div class="sum-box accent"><div class="sum-label">Total to Disburse</div><div class="sum-val">${money(total)}</div><div class="sum-sub">${esc(rows[0].pay_month)} ${esc(String(rows[0].pay_year))}</div></div>
+    </div>
+    ${exportGroups(rows)}
+    <table class="client-table" style="margin-top:6px">
+      <tfoot><tr class="totals-row">
+        <td style="font-weight:600">All entities — ${esc(rows[0].pay_month)} ${esc(String(rows[0].pay_year))}</td>
+        <td class="num">${rows.length} payment${rows.length===1?'':'s'}</td>
+        <td class="num" style="font-size:13px">${money(total)}</td>
+      </tr></tfoot>
+    </table>`
+    : `<div class="empty-note">Nothing matches that filter for ${MON[rosterMonth().month]} ${rosterMonth().year}.</div>`;
+}
+
+//  One card per entity, each with its own subtotal. Every entity pays from its
+//  own bank account, so the entity subtotal is the figure that has to reconcile
+//  against that account — a flat list makes somebody add it up by hand.
+//
+//  Grouping is a display decision only. The downloaded file stays one flat row
+//  per payment: subtotal rows inside a CSV break anything that imports it.
+function exportGroups(rows){
+  const byEntity = new Map();
+  rows.forEach(r => {
+    if (!byEntity.has(r.estate_name)) byEntity.set(r.estate_name, []);
+    byEntity.get(r.estate_name).push(r);
+  });
+
+  return [...byEntity.entries()].map(([name, list]) => {
+    const sub   = list.reduce((s,r)=>s+Number(r.amount),0);
+    const subH  = list.reduce((s,r)=>s+Number(r.total_hours),0);
+    const acct  = list[0];
+    return `<div class="card" style="margin-bottom:14px">
+      <div class="card-hdr">
+        <div class="card-title">${esc(name)}</div>
+        <div style="font-size:11px;color:var(--gray)">
+          Paying from <span class="mask">${esc(acct.estate_bank||'—')} ${mask(acct.estate_account)}</span>
+          &nbsp;·&nbsp; ${list.length} payment${list.length===1?'':'s'}
+          &nbsp;·&nbsp; <b>${money(sub)}</b>
+        </div>
+      </div>
+      <table class="client-table">
+        <thead><tr><th>Pay To</th><th>Method</th><th>Contractor Account</th><th>Period</th><th class="num">Hours</th><th class="num">Amount</th></tr></thead>
+        <tbody>${list.map(r=>`<tr>
+          <td style="font-weight:500">${esc(r.payee_name || r.contractor_name)}
+            ${r.business_name?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">for ${esc(r.contractor_name)}</div>`:''}</td>
+          <td>${esc(r.payment_method||'—')}</td>
+          <td class="mask">${esc(r.contractor_bank||'—')} ${mask(r.contractor_account)}</td>
+          <td style="color:var(--gray);white-space:nowrap">${esc(r.pay_month)} ${esc(String(r.pay_year))}</td>
+          <td class="num">${hrs(r.total_hours)}</td>
+          <td class="num" style="font-weight:600">${money(r.amount)}</td></tr>`).join('')}
+        </tbody>
+        <tfoot><tr class="totals-row">
+          <td colspan="4">${esc(name)} total</td>
+          <td class="num">${hrs(subH)}</td>
+          <td class="num">${money(sub)}</td>
+        </tr></tfoot>
+      </table></div>`;
+  }).join('');
+}
+
+//  Pay To comes first among the contractor columns — it is the field whoever
+//  cuts the payment reads, and burying it behind the individual's name is how
+//  a cheque ends up made out to the wrong party.
+const EXPORT_COLS = ['estate_name','estate_bank','estate_account','estate_routing',
+              'payee_name','contractor_name','business_name',
+              'payment_method','contractor_bank','contractor_account_name',
+              'contractor_account','contractor_routing','pay_month','pay_year','pay_period',
+              'total_hours','rate','amount','status'];
+const EXPORT_HEAD = ['Entity Name','Entity Bank','Entity Account','Entity Routing',
+              'Pay To','Contractor Name','Business Name',
+              'Payment Method','Contractor Bank','Contractor Account Name',
+              'Contractor Account','Contractor Routing','Billing Month','Billing Year','Billing Period',
+              'Total Hours','Rate','Amount','Status'];
+
+const exportValue = (r, k, revealBank) => {
+  const isBank = k.includes('account') || k.includes('routing');
+  return isBank && !revealBank ? mask(r[k]) : r[k];
+};
+
+//  asCsv produces the flat, importable file. The default is a workbook with a
+//  Summary sheet, because the person receiving this reconciles each entity
+//  against that entity's bank statement — and a total they have to compute
+//  themselves is a total that gets computed wrong.
+async function downloadExport(revealBank, asCsv){
+  const rows = exportRows();
+  if (!rows.length){ alert('Nothing to export for that month and filter.'); return; }
+  if (revealBank && !confirm('This file will contain full bank account and routing numbers in plain text.\n\nContinue?')) return;
+
+  const m = rosterMonth();
+  const stamp = `${m.year}-${String(m.month).padStart(2,'0')}`;
+  const name = `estate1099-payment-run-${stamp}${revealBank?'':'-masked'}.${asCsv?'csv':'xlsx'}`;
+
+  if (asCsv){
+    const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+    const body = rows.map(r => EXPORT_COLS.map(k => cell(exportValue(r,k,revealBank))).join(',')).join('\r\n');
+    saveBlob(new Blob(['﻿' + EXPORT_HEAD.map(cell).join(',') + '\r\n' + body],
+      {type:'text/csv;charset=utf-8'}), name);
+  } else {
+    const wb = XLSX.utils.book_new();
+
+    //  Sheet 1 — the payment schedule. Grouped by entity, every contractor
+    //  listed by name and amount, with the entity's total underneath. Accounting
+    //  works down the list paying each person, then reconciles the total against
+    //  the debit from that entity's account. An entity-level summary alone would
+    //  give them the debit but not who to pay.
+    const byEntity = new Map();
+    rows.forEach(r => {
+      if (!byEntity.has(r.estate_name)) byEntity.set(r.estate_name, []);
+      byEntity.get(r.estate_name).push(r);
+    });
+
+    const sum = [['Payment Schedule', `${MON[m.month]} ${m.year}`],
+                 ['Prepared', new Date().toLocaleString()],
+                 ['Bank details', revealBank ? 'FULL — handle as confidential' : 'Masked'],
+                 []];
+    let gAmt = 0, gHrs = 0, gCount = 0;
+
+    for (const [entity, list] of byEntity){
+      const amt  = list.reduce((s,r)=>s+Number(r.amount),0);
+      const hrsT = list.reduce((s,r)=>s+Number(r.total_hours),0);
+      gAmt += amt; gHrs += hrsT; gCount += list.length;
+      const a = list[0];
+
+      sum.push([entity.toUpperCase(),
+                'Paying from: ' + (a.estate_bank || '—') + '  ' +
+                (revealBank ? (a.estate_account||'') : mask(a.estate_account))]);
+      sum.push(['Pay To','Contractor','Method','Receiving Account','Billing Period','Hours','Amount']);
+      list.forEach(r => sum.push([
+        r.payee_name || r.contractor_name,
+        r.contractor_name,
+        r.payment_method || '',
+        revealBank ? (r.contractor_account||'') : mask(r.contractor_account),
+        r.pay_period || '',
+        Number(Number(r.total_hours).toFixed(2)),
+        Number(Number(r.amount).toFixed(2))
+      ]));
+      sum.push([entity + ' — total to debit', '', '', '',
+                list.length + ' payment' + (list.length===1?'':'s'),
+                Number(hrsT.toFixed(2)), Number(amt.toFixed(2))]);
+      sum.push([]);
+    }
+
+    sum.push(['ALL ENTITIES','','','',
+              gCount + ' payment' + (gCount===1?'':'s'),
+              Number(gHrs.toFixed(2)), Number(gAmt.toFixed(2))]);
+
+    const ws1 = XLSX.utils.aoa_to_sheet(sum);
+    ws1['!cols'] = [{wch:30},{wch:26},{wch:10},{wch:20},{wch:24},{wch:10},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Payment Schedule');
+
+    //  Sheet 2 — the flat detail, one row per payment, nothing inserted.
+    const detail = [EXPORT_HEAD].concat(rows.map(r => EXPORT_COLS.map(k => {
+      const v = exportValue(r, k, revealBank);
+      return ['total_hours','rate','amount'].includes(k) ? Number(v) : v;
+    })));
+    const ws2 = XLSX.utils.aoa_to_sheet(detail);
+    ws2['!cols'] = EXPORT_HEAD.map(h => ({ wch: Math.max(12, h.length + 3) }));
+    XLSX.utils.book_append_sheet(wb, ws2, 'Payments');
+
+    XLSX.writeFile(wb, name);
+  }
+
+  //  Logged after the file is handed over, so a cancelled download does not
+  //  leave a phantom entry. Account numbers are never stored in the log —
+  //  only the masked last four, enough to prove which account was used.
+  const filterEl = document.getElementById('exp-filter');
+  const lines = rows.map(r => ({
+    entity: r.estate_name, payee: r.payee_name, contractor: r.contractor_name,
+    method: r.payment_method, account: mask(r.contractor_account),
+    hours: r.total_hours, amount: r.amount, status: r.status
+  }));
+  const { error } = await sb.rpc('record_payment_export', {
+    p_month: m.month, p_year: m.year,
+    p_filter: filterEl ? filterEl.value : 'approved',
+    p_unmasked: !!revealBank,
+    p_line_count: rows.length,
+    p_total: rows.reduce((s,r)=>s+Number(r.amount),0),
+    p_lines: lines,
+    p_file_name: name
+  });
+  if (error) console.warn('Export log failed:', error.message);
+  await loadExportLog();
+  if (document.querySelector('.view.active').id === 'view-export') renderExportPage();
+}
+
+// ── PAYEE SETUP ───────────────────────────────────────────────────────────
+//  Who accounting needs set up, and who they already have.
+let payees = [];
+let payeeScope = 'pending';   // 'pending' = new + changed
+
+async function loadPayees(){
+  const { data } = await sb.from('payee_setup').select('*');
+  payees = (data || []).sort((a,b)=>
+    (a.estate_name||'').localeCompare(b.estate_name||'') ||
+    (a.payee_name||'').localeCompare(b.payee_name||''));
+}
+
+function payeeRows(){
+  //  Inactive contractors are excluded unless their details changed while they
+  //  were still active — accounting has no use for a payee nobody will pay.
+  const list = payees.filter(p => p.active || p.export_state === 'changed');
+  return payeeScope === 'all' ? list : list.filter(p => p.export_state !== 'unchanged');
+}
+
+function renderPayees(){
+  const el = document.getElementById('payee-body');
+  if (!el) return;
+  const rows = payeeRows();
+  const nNew = payees.filter(p=>p.active && p.export_state==='new').length;
+  const nChg = payees.filter(p=>p.export_state==='changed').length;
+  const noW9 = rows.filter(p=>!p.w9_on_file).length;
+
+  el.innerHTML = `
+    <div class="section-hdr" style="margin-top:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <select class="status-select" onchange="payeeScope=this.value;renderPayees()">
+          <option value="pending" ${payeeScope==='pending'?'selected':''}>Needs sending — new &amp; changed (${nNew+nChg})</option>
+          <option value="all" ${payeeScope==='all'?'selected':''}>Everyone on file</option>
+        </select>
+        ${nChg?`<span class="badge b-rejected">${nChg} changed</span>`:''}
+        ${nNew?`<span class="badge b-draft">${nNew} new</span>`:''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-out" onclick="downloadPayees(false)"><i class="ti ti-eye-off"></i> Masked</button>
+        <button class="btn-sm btn-teal" onclick="downloadPayees(true)"><i class="ti ti-download"></i> Download Payee File</button>
+      </div>
+    </div>
+    ${noW9?`<div class="notice n-warn"><i class="ti ti-alert-triangle"></i><div>
+      <b>${noW9} of these have no W-9 on file.</b> Set them up if you like, but the entity should not
+      disburse to them until it has one.</div></div>`:''}
+    ${rows.length ? `<table class="client-table">
+      <thead><tr><th>Status</th><th>Entity</th><th>Pay To</th><th>Method</th><th>Bank</th><th>Account</th><th>W-9</th><th>Last sent</th></tr></thead>
+      <tbody>${rows.map(p=>`<tr>
+        <td>${p.export_state==='new'?'<span class="badge b-draft">New</span>'
+             :p.export_state==='changed'?'<span class="badge b-rejected">Changed</span>'
+             :'<span class="badge b-approved">On file</span>'}</td>
+        <td>${esc(p.estate_name||'—')}</td>
+        <td style="font-weight:500">${esc(p.payee_name)}
+          ${p.business_name?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">for ${esc(p.contractor_name)}</div>`:''}</td>
+        <td>${esc(p.payment_method||'—')}</td>
+        <td>${esc(p.contractor_bank||'—')}</td>
+        <td class="mask">${mask(p.contractor_account_number)}</td>
+        <td>${p.w9_on_file?'<span class="badge b-paid">Yes</span>':'<span class="badge b-rejected">Missing</span>'}</td>
+        <td style="color:var(--gray);white-space:nowrap">${p.last_sent_at?dt(p.last_sent_at):'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty-note">Accounting is up to date — everyone on file has been sent, and nobody's details have changed since.</div>`}`;
+}
+
+async function downloadPayees(revealBank){
+  const rows = payeeRows();
+  if (!rows.length){ alert('Nothing to send — accounting already has everyone.'); return; }
+  if (revealBank && !confirm(`This file will contain full bank account and routing numbers for ${rows.length} payee${rows.length===1?'':'s'}, in plain text.\n\nContinue?`)) return;
+
+  const head = ['Status','Entity','Pay To','Contractor Name','Business Name','Entity Type',
+                'Email','Phone','Address','TIN Last 4','W-9 On File','Payment Method',
+                'Bank','Account Name','Account Number','Routing','Contract Start'];
+  const val = p => [
+    p.export_state === 'changed' ? 'UPDATE' : p.export_state === 'new' ? 'NEW' : 'ON FILE',
+    p.estate_name || '', p.payee_name || '', p.contractor_name || '', p.business_name || '',
+    p.entity_type || '', p.contractor_email || '', p.phone || '', p.address || '',
+    p.tax_id_last4 || '', p.w9_on_file ? 'Yes' : 'No', p.payment_method || '',
+    p.contractor_bank || '', p.contractor_account_name || '',
+    revealBank ? (p.contractor_account_number || '') : mask(p.contractor_account_number),
+    revealBank ? (p.contractor_routing || '') : mask(p.contractor_routing),
+    p.contract_start || ''
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const aoa = [['Payee Setup', new Date().toLocaleString()],
+               ['Contents', revealBank ? 'FULL bank details — handle as confidential' : 'Masked'],
+               ['Scope', payeeScope==='all' ? 'Everyone on file' : 'New and changed only'],
+               [], head].concat(rows.map(val));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = head.map(h => ({ wch: Math.max(14, h.length + 3) }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Payee Setup');
+
+  const name = `estate1099-payee-setup-${new Date().toISOString().slice(0,10)}${revealBank?'':'-masked'}.xlsx`;
+  XLSX.writeFile(wb, name);
+
+  //  Only a full-detail file actually sets anybody up, so only that marks them
+  //  as sent. A masked copy taken for review must not make the real ones
+  //  disappear from the list.
+  if (revealBank){
+    const { error } = await sb.rpc('record_banking_export', {
+      p_scope: payeeScope, p_file_name: name, p_contractors: rows.map(r=>r.contractor_id)
+    });
+    if (error){ alert('The file downloaded, but marking these as sent failed — ' + error.message); return; }
+    await loadPayees();
+    renderPayees();
+  }
+}
+
+//  The record of what has actually been sent to accounting.
+let exportLog = [];
+async function loadExportLog(){
+  const { data } = await sb.from('payment_exports').select('*')
+    .order('created_at',{ascending:false}).limit(60);
+  exportLog = data || [];
+}
+
+function exportLogTable(){
+  if (!exportLog.length) return `<div class="empty-note">No exports have been run yet. Once you download a payment file it is recorded here — month, who ran it, how many payments and the total.</div>`;
+  return `<table class="client-table">
+    <thead><tr><th>Run</th><th>Billing Month</th><th class="num">Payments</th><th class="num">Total</th><th>Contents</th><th>Run by</th><th style="width:90px"></th></tr></thead>
+    <tbody>${exportLog.map(x=>`<tr>
+      <td style="white-space:nowrap">${dt(x.created_at)}</td>
+      <td style="font-weight:500">${MON[x.pay_month]} ${x.pay_year}</td>
+      <td class="num">${x.line_count}</td>
+      <td class="num" style="font-weight:600">${money(x.total_amount)}</td>
+      <td>${x.unmasked
+            ? '<span class="badge b-rejected">Full bank details</span>'
+            : '<span class="badge b-draft">Masked</span>'}
+          <div style="font-size:10px;color:var(--gray)">${esc(x.filter||'')}</div></td>
+      <td style="color:var(--gray)">${esc(x.exported_email||'unknown')}</td>
+      <td style="text-align:right"><button class="btn-sm btn-gray btn-xs" onclick="viewExportRun(${x.id})"><i class="ti ti-eye"></i> Lines</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+//  What was in that run, as it stood at the time — not recalculated. An invoice
+//  amended afterwards must not change the record of what was already sent.
+function viewExportRun(id){
+  const x = exportLog.find(r=>r.id===id);
+  if (!x) return;
+  const lines = Array.isArray(x.lines) ? x.lines : [];
+  document.getElementById('mrun-title').textContent =
+    `${MON[x.pay_month]} ${x.pay_year} — run ${dt(x.created_at)}`;
+  document.getElementById('mrun-body').innerHTML = `
+    <div class="card" style="margin-bottom:14px"><div class="card-body">
+      <div class="info-row"><span class="info-label">Run by</span><span class="info-val">${esc(x.exported_email||'unknown')}</span></div>
+      <div class="info-row"><span class="info-label">File</span><span class="info-val">${esc(x.file_name||'—')}</span></div>
+      <div class="info-row"><span class="info-label">Contents</span><span class="info-val">${x.unmasked?'Full bank details':'Masked'} · ${esc(x.filter||'')}</span></div>
+      <div class="info-row"><span class="info-label">Total</span><span class="info-val">${money(x.total_amount)} across ${x.line_count} payment${x.line_count===1?'':'s'}</span></div>
+    </div></div>
+    ${lines.length?`<table class="client-table">
+      <thead><tr><th>Entity</th><th>Pay To</th><th>Method</th><th>Account</th><th class="num">Hours</th><th class="num">Amount</th></tr></thead>
+      <tbody>${lines.map(l=>`<tr>
+        <td>${esc(l.entity||'')}</td>
+        <td style="font-weight:500">${esc(l.payee||'')}${l.contractor && l.contractor!==l.payee?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">for ${esc(l.contractor)}</div>`:''}</td>
+        <td>${esc(l.method||'')}</td>
+        <td class="mask">${esc(l.account||'')}</td>
+        <td class="num">${esc(String(l.hours||''))}</td>
+        <td class="num" style="font-weight:600">${money(l.amount)}</td></tr>`).join('')}</tbody>
+    </table>`:`<div class="empty-note">No line detail was stored for this run.</div>`}`;
+  openModal('modal-run');
+}
+
+// ── MASTER WORKBOOK ───────────────────────────────────────────────────────
+//  The shape accounting already knows: a summary tab plus one tab per
+//  contractor carrying that month's line items, totals and amount due.
+async function downloadMasterWorkbook(){
+  const m = rosterMonth();
+  const invs = gInvoices
+    .filter(i => i.pay_year===m.year && i.pay_month===m.month && Number(i.entry_count)>0)
+    .sort((a,b)=> (a.estate_name||'').localeCompare(b.estate_name||'') ||
+                  a.contractor_name.localeCompare(b.contractor_name));
+  if (!invs.length){ alert(`No invoices with time for ${MON[m.month]} ${m.year}.`); return; }
+
+  const { data: entries, error } = await sb.from('time_entries')
+    .select('*').in('invoice_id', invs.map(i=>i.invoice_id))
+    .order('entry_date').order('created_at');
+  if (error){ alert('Could not load line items — ' + error.message); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // Summary tab
+  const summary = [['Entity','1099 Contractor','Total Hours','Rate','Subtotal','Adjustments','Total','Status','Notes']];
+  invs.forEach(i => summary.push([
+    i.estate_name, i.contractor_name,
+    Number(Number(i.total_hours).toFixed(2)), Number(i.rate_snapshot),
+    Number(i.subtotal), Number(i.adjustments_total), Number(i.total_due),
+    i.status, i.admin_notes || ''
+  ]));
+  summary.push([]);
+  summary.push(['', 'Total',
+    Number(invs.reduce((s,i)=>s+Number(i.total_hours),0).toFixed(2)), '',
+    Number(invs.reduce((s,i)=>s+Number(i.subtotal),0).toFixed(2)),
+    Number(invs.reduce((s,i)=>s+Number(i.adjustments_total),0).toFixed(2)),
+    Number(invs.reduce((s,i)=>s+Number(i.total_due),0).toFixed(2))]);
+  const ws = XLSX.utils.aoa_to_sheet(summary);
+  ws['!cols'] = [{wch:24},{wch:22},{wch:11},{wch:10},{wch:12},{wch:12},{wch:12},{wch:11},{wch:34}];
+  XLSX.utils.book_append_sheet(wb, ws, `${MON[m.month]} ${m.year} Summary`.slice(0,31));
+
+  // One tab per contractor
+  const used = new Set();
+  invs.forEach(i => {
+    const rows = (entries||[]).filter(e=>e.invoice_id===i.invoice_id);
+    const aoa = [['Fill out','Fill out','Fill out','Fill out','Formulated','Formulated'],
+                 ['Date','Billing Period','Minutes','Detailed Description of Work Completed','Invoiced','Hours']];
+    rows.forEach(r => aoa.push([
+      r.entry_date, i.period_label, r.minutes, r.description,
+      r.invoiced_minutes, Number(Number(r.hours).toFixed(6))
+    ]));
+    aoa.push([]);
+    aoa.push(['','','','Total Hours for Month:',
+      Number(i.total_invoiced_minutes), Number(Number(i.total_hours).toFixed(6))]);
+    aoa.push([]);
+    aoa.push(['','','','Rate', Number(i.rate_snapshot)]);
+    if (Number(i.adjustments_total)) aoa.push(['','','','Adjustments', Number(i.adjustments_total)]);
+    aoa.push(['','','','Total Amount Due', Number(i.total_due)]);
+
+    const s = XLSX.utils.aoa_to_sheet(aoa);
+    s['!cols'] = [{wch:12},{wch:20},{wch:9},{wch:64},{wch:10},{wch:9}];
+
+    // Sheet names: 31 chars, and Excel rejects : \ / ? * [ ]
+    let name = `${MON[m.month]} ${i.contractor_name}`.replace(/[:\\\/?*\[\]]/g,'-').slice(0,31);
+    let n = 2; while (used.has(name)) name = `${name.slice(0,28)}(${n++})`;
+    used.add(name);
+    XLSX.utils.book_append_sheet(wb, s, name);
+  });
+
+  XLSX.writeFile(wb, `Master 1099 Invoices ${MON[m.month]} ${m.year}.xlsx`);
+}
+
+// ── YEAR-END 1099-NEC PREP ────────────────────────────────────────────────
+function show1099(){
+  setNav('nav-1099'); setView('view-1099');
+  document.getElementById('hdr-title').textContent = '1099-NEC Preparation';
+  document.getElementById('hdr-actions').innerHTML = '';
+  render1099();
+}
+function tax1099Rows(year){
+  //  Box 1 is what was actually PAID in the calendar year — 1099-NEC is a cash
+  //  basis form, so an invoice filed in December but paid in January belongs to
+  //  the following year. Unpaid amounts are shown separately, never in Box 1.
+  return gContractors.map(c => {
+    const mine   = gInvoices.filter(i=>i.contractor_id===c.id);
+    const paid   = mine.filter(i=>i.status==='paid' && i.paid_at && new Date(i.paid_at).getFullYear()===year);
+    const unpaid = mine.filter(i=>i.status!=='paid' && i.pay_year===year);
+    return { c,
+      estate: estateName(c.estate_id),
+      box1: paid.reduce((s,i)=>s+Number(i.total_due),0),
+      hours: paid.reduce((s,i)=>s+Number(i.total_hours),0),
+      invoices: paid.length,
+      outstanding: unpaid.reduce((s,i)=>s+Number(i.total_due),0) };
+  }).filter(r => r.box1 > 0 || r.outstanding > 0)
+    .sort((a,b)=> a.estate.localeCompare(b.estate) || b.box1 - a.box1);
+}
+function render1099(){
+  const years = [...new Set(gInvoices.map(i=>i.pay_year))].sort((a,b)=>b-a);
+  const sel = document.getElementById('tax-year');
+  const year = sel ? Number(sel.value) : (years[0] || new Date().getFullYear());
+  const rows = tax1099Rows(year);
+  const reportable = rows.filter(r=>r.box1 >= 600);
+  const missingW9  = reportable.filter(r=>!r.c.w9_on_file);
+
+  document.getElementById('tax-body').innerHTML = `
+    <div class="section-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="section-title">Calendar Year</div>
+        <select class="status-select" id="tax-year" onchange="render1099()">
+          ${years.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-sm btn-teal" onclick="download1099(${year})"><i class="ti ti-download"></i> Export 1099 Worksheet</button>
+    </div>
+
+    <div class="notice n-info"><i class="ti ti-info-circle"></i><div>
+      Box 1 counts what was <b>paid</b> during ${year}, not what was billed — 1099-NEC is reported on a cash basis. An invoice filed in December but paid in January falls into the following year.</div></div>
+
+    ${missingW9.length?`<div class="notice n-bad"><i class="ti ti-file-alert"></i><div>
+      <b>${missingW9.length} contractor${missingW9.length===1?'':'s'} at or above the $600 threshold without a W-9 on file:</b>
+      ${missingW9.map(r=>esc(r.c.name)).join(', ')}. Collect these before filing.</div></div>`:''}
+
+    <div class="sum-strip">
+      <div class="sum-box"><div class="sum-label">Reportable</div><div class="sum-val">${reportable.length}</div><div class="sum-sub">at or above $600</div></div>
+      <div class="sum-box"><div class="sum-label">Below Threshold</div><div class="sum-val">${rows.filter(r=>r.box1>0&&r.box1<600).length}</div><div class="sum-sub">paid, under $600</div></div>
+      <div class="sum-box accent"><div class="sum-label">Total Box 1</div><div class="sum-val">${money(rows.reduce((s,r)=>s+r.box1,0))}</div><div class="sum-sub">paid in ${year}</div></div>
+      <div class="sum-box"><div class="sum-label">Still Outstanding</div><div class="sum-val">${money(rows.reduce((s,r)=>s+r.outstanding,0))}</div><div class="sum-sub">billed ${year}, not yet paid</div></div>
+    </div>
+
+    <table class="client-table">
+      <thead><tr><th>Entity</th><th>Recipient</th><th>Entity</th><th>TIN</th><th>W-9</th>
+        <th class="num">Invoices</th><th class="num">Hours</th><th class="num">Box 1 — Paid</th><th class="num">Outstanding</th><th>Reportable</th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>`<tr>
+        <td>${esc(r.estate)}</td>
+        <td style="font-weight:500">${esc((r.c.business_name||'').trim() || r.c.name)}
+          ${(r.c.business_name||'').trim()?`<div style="font-size:10px;color:var(--sky-txt);font-weight:300">for ${esc(r.c.name)}</div>`:''}</td>
+        <td>${esc(r.c.entity_type||'—')}</td>
+        <td class="mask">${r.c.tax_id_last4?'•••-••-'+esc(r.c.tax_id_last4):'—'}</td>
+        <td>${r.c.w9_on_file?'<span class="badge b-paid">Yes</span>':'<span class="badge b-rejected">Missing</span>'}</td>
+        <td class="num">${r.invoices}</td>
+        <td class="num">${hrs(r.hours)}</td>
+        <td class="num" style="font-weight:600">${money(r.box1)}</td>
+        <td class="num" style="color:${r.outstanding?'var(--amber)':'var(--gray)'}">${r.outstanding?money(r.outstanding):'—'}</td>
+        <td>${r.box1>=600?'<span class="badge b-approved">1099-NEC</span>':'<span class="badge b-draft">Under $600</span>'}</td>
+      </tr>`).join(''):`<tr><td colspan="10"><div class="empty-note">Nothing paid or billed in ${year}.</div></td></tr>`}</tbody>
+      <tfoot><tr class="totals-row"><td colspan="7">Total</td>
+        <td class="num">${money(rows.reduce((s,r)=>s+r.box1,0))}</td>
+        <td class="num">${money(rows.reduce((s,r)=>s+r.outstanding,0))}</td><td></td></tr></tfoot>
+    </table>`;
+}
+function download1099(year){
+  const rows = tax1099Rows(year);
+  if (!rows.length){ alert(`Nothing to report for ${year}.`); return; }
+  const head = ['Entity','Contractor','Entity Type','TIN Last 4','W-9 On File','Address',
+                'Invoices Paid','Hours Paid','Box 1 Nonemployee Compensation','Outstanding','Reportable'];
+  const cell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+  const body = rows.map(r => [
+    r.estate, r.c.name, r.c.entity_type||'', r.c.tax_id_last4||'', r.c.w9_on_file?'Yes':'No',
+    (r.c.address||'').replace(/\s*\n\s*/g,', '),
+    r.invoices, r.hours.toFixed(2), r.box1.toFixed(2), r.outstanding.toFixed(2),
+    r.box1>=600?'Yes':'No'
+  ].map(cell).join(',')).join('\r\n');
+  saveBlob(new Blob(['﻿' + head.map(cell).join(',') + '\r\n' + body], {type:'text/csv;charset=utf-8'}),
+           `1099-NEC-worksheet-${year}.csv`);
+}
+
+function saveBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportBackup(){
+  const payload = { exportedAt:new Date().toISOString(), source:'Align360 1099 Administrator',
+                    estate, contractors, periods, invoices: allInvoices };
+  saveBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
+           `estate1099-backup-${new Date().toISOString().slice(0,10)}.json`);
+}
+
+// ═══ CHARTS — single series, thin marks, hover tooltip, table view below ══
+function barCard(title, series, key, who){
+  const W=470,H=190,PADL=46,PADR=12,PADT=16,PADB=34;
+  const plotW=W-PADL-PADR, plotH=H-PADT-PADB;
+  const nice = niceMax(Math.max(...series.map(d=>d[key]),0) || 1);
+  const step = plotW/series.length;
+  const barW = Math.min(30, step-6);
+
+  const ticks = [0,nice/2,nice].map(v=>{
+    const y = PADT+plotH-(v/nice)*plotH;
+    return `<line x1="${PADL}" y1="${y}" x2="${W-PADR}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+      <text x="${PADL-7}" y="${y+3.5}" text-anchor="end" font-size="9" fill="var(--sky-txt)" font-family="Jost,sans-serif">${key==='amount'?'$'+shortNum(v):shortNum(v)}</text>`;
+  }).join('');
+
+  const peak = series.reduce((a,d,i)=> d[key]>series[a][key]?i:a, 0);
+  const last = series.length-1;
+
+  const bars = series.map((d,i)=>{
+    const h=(d[key]/nice)*plotH, x=PADL+i*step+(step-barW)/2, y=PADT+plotH-h;
+    const lbl = (i===peak||i===last) && d[key]>0
+      ? `<text x="${x+barW/2}" y="${y-5}" text-anchor="middle" font-size="9" font-weight="600" fill="var(--blk)" font-family="Jost,sans-serif">${key==='amount'?'$'+shortNum(d[key]):hrs(d[key])}</text>`:'';
+    return `<g>
+      <path class="bar-mark" d="${roundedTop(x,y,barW,h,4)}" fill="var(--teal)"/>
+      <rect class="bar-hit" x="${PADL+i*step}" y="${PADT}" width="${step}" height="${plotH}"
+            data-tip="${esc(d.full)}|${hrs(d.hours)} hrs|${money(d.amount)}"></rect>
+      ${lbl}
+      <text x="${x+barW/2}" y="${H-PADB+14}" text-anchor="middle" font-size="9" fill="var(--sky-txt)" font-family="Jost,sans-serif">${d.label}</text>
+    </g>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="card-hdr"><div class="card-title">${title}</div>
+      <div style="font-size:9px;color:var(--sky-txt);letter-spacing:0.08em;text-transform:uppercase">${esc(who)}</div></div>
+    <div class="card-body chart-wrap">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="${title} for ${esc(who)}">
+        ${ticks}
+        <line x1="${PADL}" y1="${PADT+plotH}" x2="${W-PADR}" y2="${PADT+plotH}" stroke="var(--sky)" stroke-width="1"/>
+        ${bars}
+      </svg>
+      <div class="chart-tip"></div>
+    </div></div>`;
+}
+function roundedTop(x,y,w,h,r){
+  if (h<=0) return '';
+  r = Math.min(r,h,w/2);
+  return `M${x},${y+h} L${x},${y+r} Q${x},${y} ${x+r},${y} L${x+w-r},${y} Q${x+w},${y} ${x+w},${y+r} L${x+w},${y+h} Z`;
+}
+function niceMax(v){ const m=Math.pow(10,Math.floor(Math.log10(v))); return Math.ceil(v/m*2)/2*m; }
+function shortNum(v){ return v>=1000 ? (v/1000).toFixed(v>=10000?0:1).replace(/\.0$/,'')+'k' : Math.round(v*10)/10; }
+function bindChartHovers(){
+  document.querySelectorAll('.chart-wrap').forEach(wrap=>{
+    const tip = wrap.querySelector('.chart-tip');
+    wrap.querySelectorAll('.bar-hit').forEach(hit=>{
+      hit.addEventListener('mousemove', e=>{
+        const [a,b,c] = hit.dataset.tip.split('|');
+        tip.innerHTML = `<b>${a}</b><br>${b}<br>${c}`;
+        const r = wrap.getBoundingClientRect();
+        tip.style.left = Math.min(Math.max(e.clientX-r.left+12,4), r.width-tip.offsetWidth-4)+'px';
+        tip.style.top  = (e.clientY-r.top-10)+'px';
+        tip.classList.add('show');
+        const m = hit.parentNode.querySelector('.bar-mark'); if (m) m.classList.add('hot');
+      });
+      hit.addEventListener('mouseleave', ()=>{
+        tip.classList.remove('show');
+        const m = hit.parentNode.querySelector('.bar-mark'); if (m) m.classList.remove('hot');
+      });
+    });
+  });
+}
+
+// ═══ NAV / MODALS ═════════════════════════════════════════════════════════
+function setView(id){ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===id)); }
+function setNav(id){ document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.id===id)); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function refreshCurrentView(){
+  const active = document.querySelector('.view.active').id;
+  if (active==='view-review') showReview();
+  else if (active==='view-roster') renderRoster();
+  else if (active==='view-export') renderExportPage();
+  else if (active==='view-admins') showAdmins();
+  else if (active==='view-detail' && detailContractor) showDetail(detailContractor.id);
+  else showOverviewBody();
+}
+
+document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);
+document.getElementById('setpw-form').addEventListener('submit', handleSetPassword);
+initApp();
+</script>
+</body>
+</html>
